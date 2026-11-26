@@ -1,0 +1,12 @@
+# 环境与缓存
+.venv/
+__pycache__/
+*.pyc
+
+# 编辑器配置
+.vscode/
+
+# MuJoCo 运行时生成文件
+MJDATA.TXT
+MJMODEL.TXT
+*.mjb

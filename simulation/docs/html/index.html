@@ -1,0 +1,715 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-course="仿真控制课程">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>仿真控制课程</title>
+<style>
+:root{
+  --ink:#1c2733; --ink-soft:#4d5a68; --ink-faint:#8a939d;
+  --paper:#fbf9f6; --accent:#c2622d; --accent-soft:#f8ece3; --accent-deep:#9c4a1e;
+  --line:#e6e0d7; --sidebar:#16202b; --sidebar-ink:#a8b6c4;
+  --code-bg:#1e2430; --code-ink:#d8e2ee;
+  --layer-1:#8f4419; --layer-2:#a24e20; --layer-3:#b3572a;
+  --layer-4:#c2622d; --layer-5:#cf7a45; --stroke-light:#ffffff;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;height:100%}
+body{background:var(--paper);color:var(--ink);font:16.5px/1.85 -apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;overflow:hidden}
+a{color:var(--accent-deep)}
+#progress-wrap{position:fixed;top:0;left:0;right:0;height:3px;background:var(--line);z-index:60}
+#progress{height:100%;width:0;background:var(--accent);transition:width .25s ease}
+aside{position:fixed;top:0;left:0;bottom:0;width:270px;background:var(--sidebar);color:var(--sidebar-ink);display:flex;flex-direction:column;z-index:40}
+.brand{padding:30px 24px 20px;border-bottom:1px solid rgba(255,255,255,.09)}
+.brand h1{margin:0 0 6px;font:700 19px/1.5 "Songti SC","Noto Serif SC",serif;color:#fff}
+.brand p{margin:0;font-size:12.5px;opacity:.72}
+.brand .meta{margin-top:12px;font-size:12px;opacity:.55}
+aside nav{flex:1;overflow-y:auto;padding:14px 12px 30px}
+aside nav a{display:block;padding:9px 12px;margin:2px 0;border-radius:6px;color:var(--sidebar-ink);text-decoration:none;font-size:14px;line-height:1.5;border-left:3px solid transparent}
+aside nav a:hover{background:rgba(255,255,255,.06);color:#fff}
+aside nav a.active{background:rgba(255,255,255,.10);color:#fff;border-left-color:var(--accent)}
+.course-bar{position:fixed;top:3px;left:270px;right:0;height:52px;display:flex;align-items:center;gap:10px;padding:0 34px;background:var(--paper);border-bottom:1px solid var(--line);z-index:30;font-size:13.5px}
+.course-bar .course-name{font-weight:700;color:var(--ink)}
+.course-bar .sep,.course-bar .chapter-name{color:var(--ink-soft)}
+.course-bar .chapter-progress{margin-left:auto;color:var(--ink-faint);font-variant-numeric:tabular-nums}
+main{position:fixed;top:55px;left:270px;right:0;bottom:0;overflow-y:auto;padding:38px 34px 90px}
+.view{display:none;max-width:900px;margin:0 auto}
+.view.active{display:block}
+.chapter-head{margin:0 0 34px;padding-bottom:18px;border-bottom:2px solid var(--line)}
+.chapter-num{display:inline-block;margin-right:12px;color:var(--accent);font:700 14px/1 Helvetica,Arial,sans-serif;letter-spacing:.08em;vertical-align:middle}
+.chapter-head h2{display:inline;margin:0;font:700 clamp(22px,2.9vw,29px)/1.4 "Songti SC","Noto Serif SC",serif;vertical-align:middle}
+.chapter-head .era{display:block;margin-top:10px;color:var(--ink-faint);font:13px/1.5 Helvetica,Arial,sans-serif;letter-spacing:.04em}
+.view h3{font:700 18.5px/1.5 "Songti SC","Noto Serif SC",serif;margin:34px 0 14px;padding-left:12px;border-left:3px solid var(--accent)}
+.view h4,.view h5,.view h6{font:700 16.5px/1.5 "Songti SC","Noto Serif SC",serif;margin:26px 0 12px;color:var(--ink)}
+.view p{margin:0 0 18px}
+.view ul,.view ol{margin:0 0 18px;padding-left:26px}
+.view li{margin:0 0 7px}
+.view blockquote{margin:0 0 18px;padding:10px 18px;border-left:3px solid var(--accent-soft);background:var(--accent-soft);color:var(--ink-soft)}
+.view blockquote p{margin:0}
+.view hr{border:0;border-top:1px solid var(--line);margin:30px 0}
+.view code{font:13.5px/1.6 "SFMono-Regular",Consolas,monospace;background:var(--accent-soft);color:var(--accent-deep);padding:2px 5px;border-radius:3px}
+.view pre{background:var(--code-bg);color:var(--code-ink);padding:18px 20px;border-radius:6px;overflow-x:auto;margin:0 0 20px}
+.view pre code{background:none;color:inherit;padding:0;font-size:13.5px}
+.view table{width:100%;border-collapse:collapse;margin:0 0 22px;font-size:15px}
+.view th,.view td{border:1px solid var(--line);padding:9px 12px;text-align:left;vertical-align:top}
+.view th{background:var(--accent-soft);font-weight:700}
+.view img{max-width:100%;height:auto}
+figure.diagram{margin:28px 0;padding:0;break-inside:avoid}
+figure.diagram svg{width:100%;height:auto;min-width:540px;display:block}
+.diagram-scroll{overflow-x:auto}
+figure.diagram figcaption{margin-top:10px;color:var(--ink-faint);font-size:13.5px;text-align:center;line-height:1.6}
+.mobile-nav{display:none}
+@media (max-width:900px){
+  aside{display:none}
+  body{overflow:hidden}
+  .course-bar{display:none}
+  .mobile-nav{display:flex;position:fixed;top:3px;left:0;right:0;height:56px;align-items:center;gap:12px;padding:0 16px;background:var(--paper);border-bottom:1px solid var(--line);z-index:30}
+  .mobile-nav .m-title{font-weight:700;font-size:14px;white-space:nowrap;max-width:45%;overflow:hidden;text-overflow:ellipsis}
+  .mobile-nav select{flex:1;min-width:0;padding:7px 9px;border:1px solid var(--line);border-radius:6px;background:var(--paper);color:var(--ink);font-size:14px}
+  main{top:59px;left:0;right:0;padding:24px 18px 70px}
+  figure.diagram svg{min-width:540px}
+}
+@media print{
+  #progress-wrap,aside,.course-bar,.mobile-nav{display:none!important}
+  html,body{height:auto;overflow:visible;background:#fff}
+  main{position:static;height:auto;overflow:visible;padding:0}
+  .view,.view.active{display:block!important;max-width:none;margin:0}
+  .view{break-after:page;page-break-after:always}
+  .view:last-child{break-after:auto;page-break-after:auto}
+  figure.diagram,pre,table,blockquote{break-inside:avoid;page-break-inside:avoid}
+  figure.diagram svg{min-width:0;max-width:100%}
+  a{color:inherit;text-decoration:none}
+}
+</style>
+</head>
+<body>
+<div id="progress-wrap"><div id="progress"></div></div>
+<aside>
+  <div class="brand"><h1>仿真控制课程</h1><p>大学生实训 · 32 学时</p><div class="meta">共 6 章 · 单章切换</div></div>
+  <nav><a href="#intro">00 Lite3 大学生实训项目仿真课程导学</a><a href="#ch1">01 Lite3 物理仿真基础</a><a href="#ch2">02 Lite3 的 PyBullet 与 MuJoCo 实验</a><a href="#ch3">03 Lite3 强化学习部署实验</a><a href="#ch4">04 Lite3 的 ROS2 与 LiDAR 实验</a><a href="#ch5">05 Lite3 实训考核与故障排查</a></nav>
+</aside>
+<div class="course-bar">
+  <span class="course-name">仿真控制课程</span><span class="sep">·</span>
+  <span class="chapter-name"></span><span class="chapter-progress"></span>
+</div>
+<div class="mobile-nav">
+  <span class="m-title">仿真控制课程</span>
+  <select aria-label="选择章节"><option value="intro">00 Lite3 大学生实训项目仿真课程导学</option><option value="ch1">01 Lite3 物理仿真基础</option><option value="ch2">02 Lite3 的 PyBullet 与 MuJoCo 实验</option><option value="ch3">03 Lite3 强化学习部署实验</option><option value="ch4">04 Lite3 的 ROS2 与 LiDAR 实验</option><option value="ch5">05 Lite3 实训考核与故障排查</option></select>
+</div>
+<main>
+<section class="view" id="view-intro">
+<header class="chapter-head"><span class="chapter-num">00</span><h2>Lite3 大学生实训项目仿真课程导学</h2></header>
+<h3>课程定位与使用方式</h3>
+<p>本课程以 <code>~/lite3_lab/simulation</code> 中的 Lite3 四足机器人仿真代码为主线，按照“物理基础 → 双引擎实验 → 强化学习部署 → ROS2 控制 → LiDAR 数据前端 → 综合考核”的顺序展开。课程只使用仿真环境，不连接真实机器人。</p>
+<p>Windows 可通过 <code>\\wsl.localhost\&lt;发行版&gt;\home\&lt;用户&gt;\lite3_lab\simulation</code> 访问同一目录，但 PyBullet、MuJoCo、ONNX Runtime 和 ROS2 实验应在 WSL 中运行。ROS2 实验需先 source 对应发行版及 <code>drdds</code> 消息包所在的工作空间；<code>pip install -r requirements.txt</code> 不能替代 ROS2 安装。</p>
+<table><thead><tr><th style="text-align:left">阶段</th><th style="text-align:left">主要入口</th><th style="text-align:left">学生应形成的认识</th></tr></thead><tbody><tr><td style="text-align:left">stage1</td><td style="text-align:left"><code>stage1_pybullet.py</code></td><td style="text-align:left">URDF、接触、位置控制、开环步态与外力扰动</td></tr><tr><td style="text-align:left">stage2</td><td style="text-align:left"><code>stage2_mujoco_lab.py</code></td><td style="text-align:left">MJCF、PD 力矩、摩擦/重力切换与安全蹲伏</td></tr><tr><td style="text-align:left">stage3 本地策略</td><td style="text-align:left"><code>stage3_mujoco_rl.py</code></td><td style="text-align:left">ONNX 策略、45 维观测、默认关节角与电机力矩</td></tr><tr><td style="text-align:left">stage3 ROS2</td><td style="text-align:left"><code>stage3_mujoco_ros2_sim.py</code></td><td style="text-align:left">关节指令校验、MIT 参数与超时零力矩</td></tr><tr><td style="text-align:left">stage4</td><td style="text-align:left"><code>stage4_ros2_keyboard.py</code>、<code>stage4_ros2_walk_sim.py</code>、<code>stage4_ros2_controller.py</code></td><td style="text-align:left"><code>/cmd_vel</code> 到 <code>/JOINTS_CMD</code> 的控制链</td></tr><tr><td style="text-align:left">stage5</td><td style="text-align:left"><code>stage5_lidar_frontend_sim.py</code></td><td style="text-align:left">LiDAR 点云、真值里程计与 TF 数据前端</td></tr></tbody></table>
+<blockquote><p>stage5 只是 LiDAR/SLAM 数据前端。它发布仿真真值里程计和真值 TF，不执行建图、定位、扫描匹配或回环，也没有发布 SLAM 估计结果。</p></blockquote>
+<h3>学习目标</h3>
+<p>完成课程后，学生应能够：</p>
+<ol><li>说明 URDF/MJCF、仿真步长、接触模型、关节坐标和电机执行器在四足机器人实验中的作用。</li><li>使用 <code>project_paths.py</code> 定位模型与 ONNX 策略，不依赖个人绝对路径。</li><li>操作 stage1 与 stage2，比较 PyBullet 位置控制和 MuJoCo PD 力矩控制的差异。</li><li>推导 <code>R^T*(0,0,-1)</code> 的物理意义，并正确解释 stage3 的 45 维观测顺序。</li><li>按部署策略使用默认关节角 <code>(0,-0.65,1.3)</code>，解释 PD 力矩为何不能直接替换成目标角度。</li><li>描述 ROS2 的 <code>/JOINTS_CMD</code> 校验规则、MIT 力矩公式和 0.5 秒无新指令后的零力矩行为。</li><li>跟踪 stage4 的话题与频率，区分键盘停止、控制器停止和仿真器超时保护。</li><li>识别 stage5 的点云、真值里程计、TF 与 Marker，并说明其与 SLAM 估计的边界。</li><li>根据日志、话题和测试结果定位常见故障，形成可复核的实验记录。</li></ol>
+<h3>建议学时</h3>
+<p>总学时建议为 <strong>32 学时</strong>，其中理论与教师演示约 12 学时，学生实操与验收约 20 学时。</p>
+<table><thead><tr><th style="text-align:left">教学单元</th><th style="text-align:right">建议学时</th><th style="text-align:right">理论/演示</th><th style="text-align:right">实操/验收</th></tr></thead><tbody><tr><td style="text-align:left">01 课程导学与环境核对</td><td style="text-align:right">2</td><td style="text-align:right">1</td><td style="text-align:right">1</td></tr><tr><td style="text-align:left">02 物理仿真基础</td><td style="text-align:right">6</td><td style="text-align:right">2</td><td style="text-align:right">4</td></tr><tr><td style="text-align:left">03 PyBullet 与 MuJoCo 实验</td><td style="text-align:right">8</td><td style="text-align:right">3</td><td style="text-align:right">5</td></tr><tr><td style="text-align:left">04 强化学习部署实验</td><td style="text-align:right">8</td><td style="text-align:right">3</td><td style="text-align:right">5</td></tr><tr><td style="text-align:left">05 ROS2 与 LiDAR 实验</td><td style="text-align:right">6</td><td style="text-align:right">2</td><td style="text-align:right">4</td></tr><tr><td style="text-align:left">06 考核与故障排查</td><td style="text-align:right">2</td><td style="text-align:right">1</td><td style="text-align:right">1</td></tr><tr><td style="text-align:left">合计</td><td style="text-align:right">32</td><td style="text-align:right">12</td><td style="text-align:right">20</td></tr></tbody></table>
+<p>教师可按机房显卡、WSLg 与 ROS2 环境调整演示时间；若 ROS2 尚未就绪，可先完成 stage1～stage3 本地策略，再补做通信实验。</p>
+<h3>先修知识</h3>
+<ul><li><strong>Python 基础</strong>：能运行脚本、阅读函数、使用虚拟环境，并理解 NumPy 数组形状与索引。</li><li><strong>数学基础</strong>：理解向量、矩阵乘法、转置、旋转矩阵、四元数和弧度制。</li><li><strong>物理基础</strong>：理解重力、摩擦力、速度、力矩和 PD 反馈的基本含义。</li><li><strong>机器人基础</strong>：了解四足机器人腿部关节、姿态、步态和底盘坐标系。</li><li><strong>Linux/WSL 基础</strong>：会切换目录、激活虚拟环境、查看文件和使用多个终端。</li><li><strong>ROS2 基础（stage3 ROS2 起需要）</strong>：了解节点、话题、消息、TF、<code>rclpy</code> 和 source 环境。</li></ul>
+<p>不要求预先掌握强化学习算法。本课程重点是“给定训练好的 ONNX 策略，在仿真中正确部署”，不是从零训练 PPO。</p>
+<h3>核心概念</h3>
+<h4>从模型到执行的完整链路</h4>
+<p>每章都围绕同一条链路检查问题：</p>
+<pre><code class="language-text">模型文件 → 仿真状态 → 观测/控制器 → 策略或目标姿态 → 执行器力矩 → 下一仿真状态</code></pre>
+<p>例如 stage3 中，模型状态先构造 45 维观测，ONNX 输出 12 维动作；动作用于生成目标关节角，再由 PD 公式转成 12 维力矩，最后写入 <code>data.ctrl</code>。任何一层使用了错误的坐标、关节顺序或单位，后一层即使代码“能运行”，结果也会错误。</p>
+<h4>资源定位与项目边界</h4>
+<p><code>project_paths.py</code> 以该文件自身位置为基准向上找到项目根目录，并定位：</p>
+<ul><li>URDF：<code>Lite3_rl_deploy/third_party/deep_robotics_model/Lite3/Lite3_urdf/urdf/Lite3.urdf</code></li><li>MJCF：<code>Lite3_rl_deploy/third_party/deep_robotics_model/Lite3/Lite3_mjcf/mjcf/Lite3.xml</code></li><li>ONNX：<code>Lite3_rl_deploy/policy/ppo/policy.onnx</code></li></ul>
+<p>因此，模型和策略应位于 <code>simulation</code> 的同级项目目录中。<code>assets/generated/</code> 是历史生成文件，不参与课程运行。复制脚本时不要只复制 <code>.py</code> 文件而丢失同级模型目录。</p>
+<h4>各阶段不能混用的“标准姿态”</h4>
+<table><thead><tr><th style="text-align:left">阶段</th><th style="text-align:right">HipX</th><th style="text-align:right">HipY</th><th style="text-align:right">Knee</th><th style="text-align:left">说明</th></tr></thead><tbody><tr><td style="text-align:left">stage1 站立/trot</td><td style="text-align:right">左侧 <code>0.1</code>，右侧 <code>-0.1</code></td><td style="text-align:right"><code>-0.985</code></td><td style="text-align:right"><code>2.084</code></td><td style="text-align:left">PyBullet 位置控制目标</td></tr><tr><td style="text-align:left">stage2 站立</td><td style="text-align:right">左侧 <code>0.1</code>，右侧 <code>-0.1</code></td><td style="text-align:right"><code>-0.7</code></td><td style="text-align:right"><code>1.2</code></td><td style="text-align:left">MuJoCo 实验站姿</td></tr><tr><td style="text-align:left">stage2 安全蹲伏</td><td style="text-align:right">左侧 <code>0.1</code>，右侧 <code>-0.1</code></td><td style="text-align:right"><code>-1.5</code></td><td style="text-align:right"><code>2.6</code></td><td style="text-align:left">降低重心</td></tr><tr><td style="text-align:left">stage3 部署默认角</td><td style="text-align:right"><code>0.0</code></td><td style="text-align:right"><code>-0.65</code></td><td style="text-align:right"><code>1.3</code></td><td style="text-align:left">ONNX 策略的动作中心</td></tr><tr><td style="text-align:left">stage4/stage5 步态</td><td style="text-align:right">左侧 <code>0.1</code>，右侧 <code>-0.1</code></td><td style="text-align:right"><code>-0.985</code></td><td style="text-align:right"><code>2.084</code></td><td style="text-align:left">脚本式步态基础站姿</td></tr></tbody></table>
+<p>这些数值对应不同实验设计，不能因为“都是站立”就相互替换。尤其不能把 stage1 的 <code>(0.1,-0.985,2.084)</code> 当作 stage3 的默认关节角。</p>
+<h4>数据真值与算法估计</h4>
+<p>仿真器直接知道的位姿称为“真值”。SLAM 根据传感器数据估计的位姿称为“估计值”。stage5 发布的是前者，目的是给外部 SLAM 提供输入和评测参照，不是让学生误以为已经实现了 SLAM。</p>
+<h3>教师演示</h3>
+<h4>演示 1：环境与资源检查</h4>
+<p>在 WSL 终端执行：</p>
+<pre><code class="language-bash">cd ~/lite3_lab/simulation
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+ls ../Lite3_rl_deploy/policy/ppo/policy.onnx
+python3 -m unittest discover -s tests -v</code></pre>
+<p>演示重点：</p>
+<ol><li><code>project_paths.py</code> 如何从脚本位置推导资源路径。</li><li>单元测试只导入 NumPy 与 stage3 辅助函数，不打开 MuJoCo 窗口。</li><li>6 个测试覆盖重力投影、默认关节角、PD 力矩、限幅和观测构造。</li><li>ROS2 依赖需另行安装并 source；安装失败时不应通过伪造 pip 包绕过。</li></ol>
+<h4>演示 2：建立阶段对照表</h4>
+<p>依次启动 stage1、stage2、stage3，只观察并记录，不立即追求“走得远”。让学生指出三个脚本在以下方面的差异：</p>
+<ul><li>输入方式：PyBullet 窗口键、终端字母、终端字母。</li><li>控制方式：位置控制、PD 计算后写 <code>data.ctrl</code>、ONNX+PD 写 <code>data.ctrl</code>。</li><li>默认角、推力持续时间、反馈信息。</li></ul>
+<h4>演示 3：画出 stage5 的数据边界</h4>
+<p>在白板上画出：</p>
+<pre><code class="language-text">MuJoCo 真值状态 ──→ /ground_truth_odom
+                 ├─→ TF: world → base_link
+                 └─→ /lidar_points（世界系点云）
+                               ↓
+                     外部 SLAM（本课程未实现）</code></pre>
+<p>强调箭头方向：stage5 向外部系统提供数据，不接收 SLAM 估计，也不构建地图。</p>
+<h3>学生实操</h3>
+<ol><li>在 WSL 中完成虚拟环境安装，记录 Python、NumPy、PyBullet、MuJoCo、ONNX Runtime 版本。</li><li>核对三个资源文件存在，并运行 <code>python3 -m unittest discover -s tests -v</code>。</li><li>从 <code>simulation</code> 目录依次运行 stage1、stage2、stage3，各完成一次启动、复位和退出。</li><li>填写阶段对照表：输入键、默认角、控制量、推力、复位行为、主要日志。</li><li>画出 stage3 的观测—动作—力矩链路，标注每一段数组的维数。</li><li>画出 stage5 的发布话题和坐标系，并用一句话写明“它不做什么”。</li><li>保存关键终端输出或截图，作为后续验收证据；不要修改模型或策略文件。</li></ol>
+<blockquote><p>Windows 资源管理器适合阅读本课程 Markdown 与源码，但带有交互终端、ROS2 和 WSLg 的实验应从 WSL 终端启动。</p></blockquote>
+<h3>思考题</h3>
+<ol><li>为什么资源路径要基于 <code>__file__</code>，而不是写死 <code>/home/&lt;用户名&gt;</code>？</li><li>如果 45 维观测中各段长度正确但顺序错误，ONNX 推理还能运行吗？结果为何仍可能错误？</li><li>为什么 stage1 的默认角不能直接替代 stage3 的默认角？</li><li>位置目标与电机力矩有什么本质区别？</li><li>仿真真值里程计能否作为 SLAM 的定位精度指标？它能否替代 SLAM 估计？</li><li>键盘停止 <code>/cmd_vel</code>、控制器停止发布 <code>/JOINTS_CMD</code>、仿真器超时零力矩分别发生在哪一层？</li></ol>
+<h3>验收标准</h3>
+<table><thead><tr><th style="text-align:left">验收项</th><th style="text-align:left">合格标准</th></tr></thead><tbody><tr><td style="text-align:left">环境</td><td style="text-align:left">在 WSL 中运行脚本；能说明 requirements 与 ROS2 依赖的区别</td></tr><tr><td style="text-align:left">资源</td><td style="text-align:left">三个模型/策略路径均存在，无需修改个人绝对路径</td></tr><tr><td style="text-align:left">阶段认识</td><td style="text-align:left">能正确说出 stage1～stage5 的入口和主要输入输出</td></tr><tr><td style="text-align:left">基础测试</td><td style="text-align:left"><code>python3 -m unittest discover -s tests -v</code> 的 6 项测试全部通过</td></tr><tr><td style="text-align:left">控制链</td><td style="text-align:left">能画出 stage3 的 45 维观测、12 维动作、目标角与 PD 力矩链路</td></tr><tr><td style="text-align:left">课程边界</td><td style="text-align:left">明确 stage5 不建图、不定位、不回环，并发布真值而非 SLAM 估计</td></tr><tr><td style="text-align:left">记录</td><td style="text-align:left">有一次成功启动/复位/退出记录，且能根据日志描述当时状态</td></tr></tbody></table>
+<h3>常见错误</h3>
+<ul><li><strong>在 Windows PowerShell 中直接运行全部实验</strong>：ROS2、<code>termios</code> 和 WSL 图形环境可能不可用。应在 WSL 中运行。</li><li><strong>只复制 <code>simulation</code> 目录</strong>：缺少 <code>Lite3_rl_deploy</code> 后模型或策略无法加载。应保留项目相对结构。</li><li><strong>把 pip 依赖当作完整 ROS2 环境</strong>：<code>drdds</code>、<code>rclpy</code> 等需要正确的 ROS2 安装与 source。</li><li><strong>混淆各阶段默认角</strong>：先确认脚本，再讨论数值；不要跨阶段复制“站姿参数”。</li><li><strong>把 stage5 称为 SLAM</strong>：准确名称是“使用真值里程计的 LiDAR/SLAM 数据前端仿真”。</li><li><strong>遇到 GUI 问题只重装 Python 包</strong>：先检查 WSLg、<code>DISPLAY</code>、图形驱动与是否从交互式终端启动。</li><li><strong>忽略复位的环境恢复作用</strong>：stage1/stage2 的复位会同时恢复摩擦、重力、模式和推力状态，不能把复位理解为只移动机器人。</li></ul>
+</section>
+<section class="view" id="view-ch1">
+<header class="chapter-head"><span class="chapter-num">01</span><h2>Lite3 物理仿真基础</h2></header>
+<h3>学习目标</h3>
+<p>完成本单元后，学生应能够：</p>
+<ol><li>解释 URDF/MJCF 在仿真中的职责，并区分模型描述与控制器代码。</li><li>读取 Lite3 自由关节的 <code>qpos</code>、<code>qvel</code> 布局以及 12 个驱动关节的索引。</li><li>用旋转矩阵和四元数解释 <code>R^T*(0,0,-1)</code>，并判断正负号是否正确。</li><li>推导 PD 力矩公式，解释比例项、微分项和执行器限幅。</li><li>区分位置控制接口与电机力矩接口，避免把目标角直接交给力矩执行器。</li><li>比较 stage1、stage2、stage3 的默认关节角，并说明它们为何不同。</li><li>用接触对数、底盘高度和速度等可观测量设计简单的物理对照实验。</li></ol>
+<h3>建议学时</h3>
+<p>建议 <strong>6 学时</strong>：2 学时讲授与板演，4 学时上机观察和记录。</p>
+<table><thead><tr><th style="text-align:left">活动</th><th style="text-align:right">学时</th></tr></thead><tbody><tr><td style="text-align:left">模型、坐标系与状态数组</td><td style="text-align:right">1</td></tr><tr><td style="text-align:left">重力投影与 PD 力矩板演</td><td style="text-align:right">1</td></tr><tr><td style="text-align:left">stage1/stage2 对照观察</td><td style="text-align:right">2</td></tr><tr><td style="text-align:left">数据记录与课堂验收</td><td style="text-align:right">2</td></tr></tbody></table>
+<h3>先修知识</h3>
+<ul><li>向量、矩阵、转置与旋转的基本概念。</li><li>四元数表示三维旋转的基本方法；不要求手算所有四元数运算。</li><li>质量、力、力矩、速度、摩擦和重力的基本物理意义。</li><li>Python 函数调用与 NumPy 数组索引。</li><li>已阅读 <code>project_paths.py</code>，知道 URDF、MJCF 和 ONNX 的定位方式。</li></ul>
+<h3>核心概念</h3>
+<h4>模型文件与仿真循环</h4>
+<p><strong>URDF</strong> 主要描述机器人连杆、关节、惯量、碰撞与视觉几何；<strong>MJCF</strong> 是 MuJoCo 使用的模型描述格式。本课程通过 <code>project_paths.py</code> 分别加载：</p>
+<ul><li>PyBullet：<code>Lite3.urdf</code></li><li>MuJoCo：<code>Lite3.xml</code></li></ul>
+<p>模型文件不会告诉控制器“此刻应该怎么走”。每个仿真循环通常包括：</p>
+<pre><code class="language-text">读取状态 → 计算控制量 → 写入执行器 → 推进一个时间步 → 更新接触与运动状态</code></pre>
+<p>因此，研究控制效果时必须同时检查“状态读取”和“执行器写入”，不能只看策略或步态函数。</p>
+<h4>世界系、机体系与四元数</h4>
+<p>本课程约定世界系竖直向上为 <code>+z</code>，重力方向向量为 <code>(0,0,-1)</code>。四元数按 MuJoCo 的顺序 <code>(w,x,y,z)</code> 排列。</p>
+<p>设 <code>R(q)</code> 将机体系向量转换到世界系：</p>
+<pre><code class="language-text">v_world = R(q) · v_body</code></pre>
+<p>若已知世界系中的方向，需要计算机体系中的表示，就使用逆变换。旋转矩阵的逆等于转置：</p>
+<pre><code class="language-text">v_body = R(q)^T · v_world</code></pre>
+<p>策略需要的不是以 <code>m/s²</code> 为单位的重力大小，而是重力的单位方向在机体系中的投影，所以：</p>
+<pre><code class="language-text">g_body = R^T · (0,0,-1)</code></pre>
+<h4><code>R^T*(0,0,-1)</code> 的物理意义</h4>
+<p><code>stage3_mujoco_rl.py</code> 中的 <code>projected_gravity()</code> 根据 <code>(w,x,y,z)</code> 四元数构造机体系到世界系的旋转矩阵，再执行 <code>rotation.T @ GRAVITY_DIRECTION</code>。</p>
+<table><thead><tr><th style="text-align:left">机身姿态</th><th style="text-align:left">世界重力方向</th><th style="text-align:left">机体系投影</th><th style="text-align:left">含义</th></tr></thead><tbody><tr><td style="text-align:left">水平，单位四元数 <code>[1,0,0,0]</code></td><td style="text-align:left"><code>(0,0,-1)</code></td><td style="text-align:left"><code>(0,0,-1)</code></td><td style="text-align:left">重力从脚底方向向下作用</td></tr><tr><td style="text-align:left">绕世界/机身 x 轴旋转 <code>+90°</code></td><td style="text-align:left"><code>(0,0,-1)</code></td><td style="text-align:left"><code>(0,-1,0)</code></td><td style="text-align:left">机体系 <code>-y</code> 方向朝向重力</td></tr></tbody></table>
+<p>第二个结果正是 <code>tests/test_stage3_rl.py</code> 验证的 <code>[0,-1,0]</code>。如果误写成 <code>R*(0,0,-1)</code>，表示的已经是世界系方向，不能直接作为机体系观测；在非单位姿态下，它与正确答案一般不同。</p>
+<p>投影向量的长度在数值精确时应为 1。它可以随姿态改变三个分量，但不随重力加速度数值 <code>9.81</code> 改变。</p>
+<h4>Lite3 状态数组布局</h4>
+<p>本课程的 Lite3 模型具有自由浮动机身，随后是 12 个驱动关节。理解以下布局是排查观测错误的前提：</p>
+<table><thead><tr><th style="text-align:left">数组</th><th style="text-align:left">范围</th><th style="text-align:left">内容</th></tr></thead><tbody><tr><td style="text-align:left"><code>data.qpos[0:3]</code></td><td style="text-align:left">0、1、2</td><td style="text-align:left">机身位置 <code>x,y,z</code></td></tr><tr><td style="text-align:left"><code>data.qpos[3:7]</code></td><td style="text-align:left">3、4、5、6</td><td style="text-align:left">机身四元数 <code>w,x,y,z</code></td></tr><tr><td style="text-align:left"><code>data.qpos[7:19]</code></td><td style="text-align:left">7～18</td><td style="text-align:left">12 个关节位置</td></tr><tr><td style="text-align:left"><code>data.qvel[0:3]</code></td><td style="text-align:left">0、1、2</td><td style="text-align:left">stage3 使用的机身角速度分量</td></tr><tr><td style="text-align:left"><code>data.qvel[3:6]</code></td><td style="text-align:left">3、4、5</td><td style="text-align:left">机身线速度分量</td></tr><tr><td style="text-align:left"><code>data.qvel[6:18]</code></td><td style="text-align:left">6～17</td><td style="text-align:left">12 个关节速度</td></tr></tbody></table>
+<p>stage3 不直接假设所有关节一定从固定下标开始，而是通过 <code>model.actuator_trnid</code> 找到每个执行器对应的关节，再用 <code>model.jnt_qposadr</code> 与 <code>model.jnt_dofadr</code> 得到地址。这样可以把关节位置和速度稳定地组织成 12 维数组。</p>
+<blockquote><p>这些下标对应当前 Lite3 自由关节模型。若换成固定底座、不同关节数或不同模型，必须先重新检查布局，不能机械照搬。</p></blockquote>
+<h4>关节顺序与默认关节角</h4>
+<p>stage3 的默认位置由 <code>np.tile([0.0,-0.65,1.3],4)</code> 生成，即每三个关节为一组：</p>
+<pre><code class="language-text">[HipX, HipY, Knee] × 4</code></pre>
+<p>结合 stage4 的编号约定，四组依次为 FL、FR、HL、HR。stage3 实际读取时仍以模型执行器顺序为准。默认角表示“每个策略动作围绕哪个姿态变化”，不是“机器人实际已经达到的关节角”。</p>
+<p>各阶段基础角对比如下：</p>
+<table><thead><tr><th style="text-align:left">使用场景</th><th style="text-align:right">HipX</th><th style="text-align:right">HipY</th><th style="text-align:right">Knee</th></tr></thead><tbody><tr><td style="text-align:left">stage1 站立/trot</td><td style="text-align:right">左侧 <code>0.1</code>，右侧 <code>-0.1</code></td><td style="text-align:right"><code>-0.985</code></td><td style="text-align:right"><code>2.084</code></td></tr><tr><td style="text-align:left">stage2 站立</td><td style="text-align:right">左侧 <code>0.1</code>，右侧 <code>-0.1</code></td><td style="text-align:right"><code>-0.7</code></td><td style="text-align:right"><code>1.2</code></td></tr><tr><td style="text-align:left">stage2 安全蹲伏</td><td style="text-align:right">左侧 <code>0.1</code>，右侧 <code>-0.1</code></td><td style="text-align:right"><code>-1.5</code></td><td style="text-align:right"><code>2.6</code></td></tr><tr><td style="text-align:left">stage3 部署策略</td><td style="text-align:right"><code>0.0</code></td><td style="text-align:right"><code>-0.65</code></td><td style="text-align:right"><code>1.3</code></td></tr><tr><td style="text-align:left">stage4/stage5 基础步态</td><td style="text-align:right">左侧 <code>0.1</code>，右侧 <code>-0.1</code></td><td style="text-align:right"><code>-0.985</code></td><td style="text-align:right"><code>2.084</code></td></tr></tbody></table>
+<p>stage3 观测还使用“实际位置减默认位置”的偏差，而不是直接输入绝对关节角。这样策略看到的是相对部署零位的偏离。</p>
+<h4>PD 力矩与执行器接口</h4>
+<p>PD 力矩的基本形式为：</p>
+<pre><code class="language-text">tau = kp * (q_target - q) + kd * (q_velocity_target - q_velocity)</code></pre>
+<p>stage3 的关节速度目标为 0，因此：</p>
+<pre><code class="language-text">tau = 30 * (q_target - q) + 1 * (0 - q_velocity)
+   = 30 * (q_target - q) - q_velocity</code></pre>
+<ul><li>位置误差越大，比例项产生的恢复力矩越大。</li><li>关节速度越大，微分项越倾向于抑制运动。</li><li>最终力矩还要按 <code>model.actuator_ctrlrange</code> 的每个执行器上下限裁剪。</li></ul>
+<p>例如测试输入 <code>q_target=[1,-1]</code>、<code>q=[0.5,0]</code>、<code>q_vel=[2,-4]</code>：</p>
+<pre><code class="language-text">tau[0] = 30*(1-0.5) - 2 = 13
+tau[1] = 30*(-1-0) - (-4) = -26</code></pre>
+<p>若每个执行器限幅为 <code>[-5,10]</code>，结果应为 <code>[10,-5]</code>。</p>
+<h4>位置目标不等于力矩</h4>
+<p><code>Lite3.xml</code> 中 stage3 使用的执行器是电机，<code>data.ctrl</code> 接收的是力矩。因此正确的链路是：</p>
+<pre><code class="language-text">ONNX 动作 → 目标关节角 → PD 计算 → 电机力矩 → data.ctrl</code></pre>
+<p>如果跳过 PD，把 12 个目标角直接写入 <code>data.ctrl</code>，解释器的数值可能仍然合法，但执行器会把角度数值当作力矩，导致行为完全错误。</p>
+<p>相比之下：</p>
+<ul><li>stage1 使用 PyBullet 的 <code>POSITION_CONTROL</code> 接口，由仿真器结合电机参数跟踪目标位置。</li><li>stage2 在代码中显式计算 <code>40*(target-qpos)-2*qvel</code>，再写入 <code>data.ctrl</code>。</li><li>stage4/stage5 也显式或间接使用 <code>kp=40</code>、<code>kd=2</code> 的位置反馈生成关节指令/力矩。</li></ul>
+<h4>时间步、频率与外力的区别</h4>
+<ul><li><code>DT=1/240</code> 是 stage1 的仿真步长；trot 频率 <code>2.0 Hz</code> 是步态参数，两者不是同一个概念。</li><li>控制频率决定多久重新计算一次指令；仿真步长决定积分器多久推进一次物理状态。</li><li>stage1 的 150 N 推力每步乘 <code>0.95</code> 衰减，属于逐渐减弱的持续外力。</li><li>stage2 的 150 N 推力持续 <code>0.15 s</code>，按模型时间步折算为若干仿真步。</li><li>stage3 的侧向 150 N 触发后在后续步中按 <code>0.9</code> 衰减。</li></ul>
+<p>因此，“都按了 p”不代表三个实验受到相同冲量或相同扰动。</p>
+<h3>教师演示</h3>
+<h4>演示 1：手算重力投影</h4>
+<ol><li>在黑板写出 <code>R</code>、<code>R^T</code> 和 <code>g_world=(0,0,-1)</code>。</li><li>先算单位四元数，再算 x 轴 <code>+90°</code> 四元数 <code>[sqrt(0.5),sqrt(0.5),0,0]</code>。</li><li>运行只依赖 NumPy 的测试：</li></ol>
+<pre><code class="language-bash">cd ~/lite3_lab/simulation
+source .venv/bin/activate
+python3 -m unittest tests.test_stage3_rl.Stage3RLHelpersTest.test_projected_gravity_at_identity_points_down -v
+python3 -m unittest tests.test_stage3_rl.Stage3RLHelpersTest.test_projected_gravity_for_x_rotation -v</code></pre>
+<h4>演示 2：PD 数值与限幅</h4>
+<p>运行：</p>
+<pre><code class="language-bash">python3 -m unittest tests.test_stage3_rl.Stage3RLHelpersTest.test_pd_torque_direction_and_magnitude -v
+python3 -m unittest tests.test_stage3_rl.Stage3RLHelpersTest.test_pd_torque_clips_to_actuator_limits -v</code></pre>
+<p>让学生先独立算出 <code>[13,-26]</code> 和限幅后的 <code>[10,-5]</code>，再用测试验证。强调测试检查的是方向和幅值，不是“看起来在动”。</p>
+<h4>演示 3：比较两种仿真器中的站姿</h4>
+<p>分别运行：</p>
+<pre><code class="language-bash">python3 stage1_pybullet.py</code></pre>
+<p>结束进程后，在另一个终端运行：</p>
+<pre><code class="language-bash">python3 stage2_mujoco_lab.py</code></pre>
+<p>先保持默认站姿，再切换安全蹲伏。引导学生观察：</p>
+<ul><li>机身高度是否变化；</li><li>关节角目标是否变化；</li><li>控制量是由位置接口还是 PD 公式生成；</li><li>日志中的接触数量说明了什么、没有说明什么。</li></ul>
+<h3>学生实操</h3>
+<h4>任务 1：状态数组读数记录</h4>
+<p>在不修改源码的前提下，结合代码填写：</p>
+<table><thead><tr><th style="text-align:left">项目</th><th style="text-align:left">你的答案</th></tr></thead><tbody><tr><td style="text-align:left">机身位置在 <code>qpos</code> 中的范围</td><td style="text-align:left"></td></tr><tr><td style="text-align:left">机身四元数在 <code>qpos</code> 中的范围</td><td style="text-align:left"></td></tr><tr><td style="text-align:left">12 个关节位置的范围</td><td style="text-align:left"></td></tr><tr><td style="text-align:left">12 个关节速度的范围</td><td style="text-align:left"></td></tr><tr><td style="text-align:left">stage3 重力函数读取哪个范围</td><td style="text-align:left"></td></tr><tr><td style="text-align:left">stage3 关节地址由哪些模型字段确定</td><td style="text-align:left"></td></tr></tbody></table>
+<h4>任务 2：重力投影板演</h4>
+<p>至少计算以下三种姿态，并写出中间旋转矩阵：</p>
+<ol><li>单位四元数。</li><li>x 轴 <code>+90°</code>。</li><li>任意一个由教师指定的非单位姿态。</li></ol>
+<p>检查投影向量是否长度为 1，并说明其正负方向与机身姿态的关系。</p>
+<h4>任务 3：PD 与默认角练习</h4>
+<ol><li>写出 stage3 的默认 12 维关节角数组。</li><li>给定一组目标角、实际角和角速度，计算未限幅的 PD 力矩。</li><li>人为给每个关节设置 <code>[-5,10]</code> 限幅，再计算裁剪结果。</li><li>解释为什么“PD 力矩为 0”不保证“关节位置等于目标角”。</li></ol>
+<h4>任务 4：物理现象观察</h4>
+<p>按顺序观察并记录：正常站立、低摩擦、零重力、150 N 推力、安全蹲伏。每次只改变一个因素，并在改变前按 <code>r</code> 复位。</p>
+<table><thead><tr><th style="text-align:left">实验</th><th style="text-align:left">改变的变量</th><th style="text-align:left">观察量</th><th style="text-align:left">现象</th><th style="text-align:left">可能原因</th></tr></thead><tbody><tr><td style="text-align:left">站立基线</td><td style="text-align:left">无</td><td style="text-align:left">高度、接触数</td><td style="text-align:left"></td><td style="text-align:left"></td></tr><tr><td style="text-align:left">低摩擦</td><td style="text-align:left">摩擦系数</td><td style="text-align:left">接触数、滑移</td><td style="text-align:left"></td><td style="text-align:left"></td></tr><tr><td style="text-align:left">零重力</td><td style="text-align:left">重力</td><td style="text-align:left">高度、支撑状态</td><td style="text-align:left"></td><td style="text-align:left"></td></tr><tr><td style="text-align:left">侧向/瞬时推力</td><td style="text-align:left">外力</td><td style="text-align:left">倾倒方向、恢复时间</td><td style="text-align:left"></td><td style="text-align:left"></td></tr><tr><td style="text-align:left">安全蹲伏</td><td style="text-align:left">姿态目标</td><td style="text-align:left">高度、关节角</td><td style="text-align:left"></td><td style="text-align:left"></td></tr></tbody></table>
+<h3>思考题</h3>
+<ol><li>为什么使用 <code>R^T</code> 而不是 <code>R</code> 计算机体系重力方向？</li><li>若重力加速度从 <code>9.81</code> 改成 <code>3.71</code>，单位方向投影会改变吗？实际动力学又会怎样变化？</li><li>观测中为什么使用关节位置偏差而不是绝对位置？</li><li>默认关节角、目标关节角和实际关节角分别出现在链路的哪一步？</li><li>PD 力矩限幅后，位置误差仍然很大，机器人为什么可能无法继续增大恢复力矩？</li><li>接触对数为 0 是否一定意味着模型加载失败？接触对数很多是否一定意味着站得稳定？</li><li>为什么 stage1 和 stage2 的 150 N 推力不能直接比较恢复效果？</li></ol>
+<h3>验收标准</h3>
+<table><thead><tr><th style="text-align:left">验收项</th><th style="text-align:left">合格标准</th></tr></thead><tbody><tr><td style="text-align:left">状态布局</td><td style="text-align:left">能准确写出机身与 12 个关节在 <code>qpos/qvel</code> 中的范围</td></tr><tr><td style="text-align:left">重力投影</td><td style="text-align:left">水平时为 <code>[0,0,-1]</code>，x 轴 <code>+90°</code> 时为 <code>[0,-1,0]</code>，容差达到测试要求</td></tr><tr><td style="text-align:left">默认角</td><td style="text-align:left">能完整写出 <code>[0,-0.65,1.3]</code> 重复 4 次的 12 维数组，并说明每组含义</td></tr><tr><td style="text-align:left">PD 计算</td><td style="text-align:left">对给定样例得到 <code>[13,-26]</code>，限幅后得到 <code>[10,-5]</code></td></tr><tr><td style="text-align:left">执行器接口</td><td style="text-align:left">明确 stage3 的 <code>data.ctrl</code> 是力矩，不能直接写目标角</td></tr><tr><td style="text-align:left">对照实验</td><td style="text-align:left">每次只改变一个变量，记录复位状态与至少两个观察量</td></tr><tr><td style="text-align:left">阶段参数</td><td style="text-align:left">不混淆 stage1/2/4 的站姿与 stage3 的部署默认角</td></tr></tbody></table>
+<h3>常见错误</h3>
+<ul><li><strong>四元数顺序写成 <code>(x,y,z,w)</code></strong>：代码使用 <code>(w,x,y,z)</code>。顺序错误会严重改变旋转结果。</li><li><strong>把 <code>R*(0,0,-1)</code> 当作机体系投影</strong>：世界到机身应使用 <code>R^T</code>。</li><li><strong>把投影重力乘以 <code>9.81</code> 后送入观测</strong>：当前策略需要单位方向，测试也按单位方向验证。</li><li><strong>关节位置和关节速度使用同一组下标</strong>：<code>qpos[7:19]</code> 与 <code>qvel[6:18]</code> 的起始下标不同。</li><li><strong>用 <code>qpos[:12]</code> 取关节角</strong>：会混入机身位置、四元数和部分关节数据。</li><li><strong>把默认角当作实际反馈</strong>：默认角是策略动作中心；反馈来自当前 <code>qpos</code>。</li><li><strong>认为 PD 能无限产生力矩</strong>：实际执行器有控制范围，超限部分会被裁剪。</li><li><strong>忽略外力施加时间</strong>：stage1 衰减、stage2 持续 0.15 秒、stage3 单步触发后衰减，三者不同。</li><li><strong>只凭接触对数判断稳定性</strong>：还需结合高度、姿态、速度和是否持续滑移综合判断。</li></ul>
+</section>
+<section class="view" id="view-ch2">
+<header class="chapter-head"><span class="chapter-num">02</span><h2>Lite3 的 PyBullet 与 MuJoCo 实验</h2></header>
+<h3>学习目标</h3>
+<p>完成本单元后，学生应能够：</p>
+<ol><li>启动并操作 <code>stage1_pybullet.py</code>，说明站立、阻尼、安全蹲伏和 trot 四种行为。</li><li>启动并操作 <code>stage2_mujoco_lab.py</code>，说明站立/蹲伏、摩擦、重力和 150 N 推力实验。</li><li>比较 PyBullet <code>POSITION_CONTROL</code> 与 MuJoCo 中显式 PD 力矩计算的差异。</li><li>解释对角步态的相位关系，以及 <code>HipY/Knee</code> 目标如何变化。</li><li>按“单变量、先复位、再扰动、后恢复”的方法完成对照实验。</li><li>从接触对数、终端日志和画面中提取证据，而不是只凭主观判断“走得好”。</li></ol>
+<h3>建议学时</h3>
+<p>建议 <strong>8 学时</strong>：教师演示 3 学时，学生实操 5 学时，课堂验收穿插进行。</p>
+<table><thead><tr><th style="text-align:left">活动</th><th style="text-align:right">学时</th></tr></thead><tbody><tr><td style="text-align:left">PyBullet 模型、接口与键位演示</td><td style="text-align:right">1.5</td></tr><tr><td style="text-align:left">MuJoCo 模型、PD 与输入线程演示</td><td style="text-align:right">1.5</td></tr><tr><td style="text-align:left">学生基础操作与步态观察</td><td style="text-align:right">2</td></tr><tr><td style="text-align:left">摩擦/重力/推力单变量实验</td><td style="text-align:right">2</td></tr><tr><td style="text-align:left">对照记录与验收</td><td style="text-align:right">1</td></tr></tbody></table>
+<h3>先修知识</h3>
+<ul><li>已完成“物理仿真基础”中的坐标系、四元数、PD 和状态数组学习。</li><li>了解四足机器人 FL、FR、HL、HR 四个腿组及 HipX、HipY、Knee 三类关节。</li><li>能在 WSL 中激活 Python 虚拟环境并运行脚本。</li><li>知道 PyBullet 与 MuJoCo 是两个不同物理引擎，不会共享内存或状态。</li></ul>
+<h3>核心概念</h3>
+<h4>两个引擎的共同点与差异</h4>
+<table><thead><tr><th style="text-align:left">项目</th><th style="text-align:left">stage1 PyBullet</th><th style="text-align:left">stage2 MuJoCo</th></tr></thead><tbody><tr><td style="text-align:left">模型格式</td><td style="text-align:left">URDF</td><td style="text-align:left">MJCF</td></tr><tr><td style="text-align:left">初始机身高度</td><td style="text-align:left"><code>0.28 m</code></td><td style="text-align:left"><code>0.35 m</code></td></tr><tr><td style="text-align:left">站立角 HipY/Knee</td><td style="text-align:left"><code>-0.985 / 2.084</code></td><td style="text-align:left"><code>-0.7 / 1.2</code></td></tr><tr><td style="text-align:left">站立 HipX</td><td style="text-align:left">左 <code>0.1</code>，右 <code>-0.1</code></td><td style="text-align:left">左 <code>0.1</code>，右 <code>-0.1</code></td></tr><tr><td style="text-align:left">主要控制方式</td><td style="text-align:left"><code>POSITION_CONTROL</code></td><td style="text-align:left">显式 PD 后写 <code>data.ctrl</code></td></tr><tr><td style="text-align:left">正常步态</td><td style="text-align:left">2 Hz trot</td><td style="text-align:left">只有站立/安全蹲伏</td></tr><tr><td style="text-align:left">输入</td><td style="text-align:left">PyBullet 窗口键</td><td style="text-align:left">查看器字母键或终端输入</td></tr><tr><td style="text-align:left">推力</td><td style="text-align:left">150 N，逐步衰减</td><td style="text-align:left">150 N，持续 <code>0.15 s</code></td></tr><tr><td style="text-align:left">复位</td><td style="text-align:left">恢复摩擦、重力、模式并重置关节</td><td style="text-align:left">恢复摩擦、重力、模式并重置数据</td></tr></tbody></table>
+<p>两者都连接地面并启用机器人自碰撞，但模型表达、执行器参数和初始条件不同，因此不能期望同一组动作产生完全相同的轨迹。</p>
+<h4>stage1 的四种行为</h4>
+<ol><li><strong>站立</strong>：按基础站姿下发位置目标；站立/trot 的最大电机力参数为 <code>60</code>。</li><li><strong>trot</strong>：频率 <code>2.0 Hz</code>，FL 与 HR 同相，FR 与 HL 反相；运动时还会施加沿机身 x 轴、大小为 <code>30*|vx|</code> 的辅助外力。</li><li><strong>阻尼</strong>：使用 <code>VELOCITY_CONTROL</code>，目标速度为 0，力参数仅 <code>0.1</code>，用于被动耗散运动。</li><li><strong>安全蹲伏</strong>：<code>HipY=-1.5</code>、<code>Knee=2.6</code>，最大力参数为 <code>30</code>，通过降低姿态增强稳定性。</li></ol>
+<p>trot 的膝关节抬腿量为：</p>
+<pre><code class="language-text">0.30 * max(0, -sin(phase))</code></pre>
+<p>HipY 在基础角上叠加 <code>0.25*sin(phase)</code> 和 <code>0.2*vx</code>。这是一种脚本式开环步态，不使用状态反馈重新规划落足点。</p>
+<h4>stage1 的键位与环境切换</h4>
+<table><thead><tr><th style="text-align:left">操作</th><th style="text-align:left">效果</th></tr></thead><tbody><tr><td style="text-align:left">上/下方向键</td><td style="text-align:left"><code>move_speed=+1/-1</code>，松开回 0；非零时进入 trot</td></tr><tr><td style="text-align:left"><code>1</code></td><td style="text-align:left">脚部摩擦在 <code>0.8</code> 与 <code>0.01</code> 间切换</td></tr><tr><td style="text-align:left"><code>2</code></td><td style="text-align:left">重力在 <code>-9.81</code> 与 <code>0</code> 间切换</td></tr><tr><td style="text-align:left"><code>3</code></td><td style="text-align:left">站立 → 阻尼 → 安全蹲伏循环</td></tr><tr><td style="text-align:left">空格</td><td style="text-align:left">在底盘上方 <code>z=0.1</code> 处施加 150 N 瞬时推力，之后每步乘 <code>0.95</code></td></tr><tr><td style="text-align:left"><code>r</code></td><td style="text-align:left">复位到站姿，同时恢复默认摩擦、重力和模式</td></tr><tr><td style="text-align:left">关闭窗口/结束进程</td><td style="text-align:left">退出实验</td></tr></tbody></table>
+<p>方向键是否有效取决于 PyBullet 窗口是否获得键盘焦点。日志每 120 步打印当前摩擦、重力、接触对数和速度设定。</p>
+<h4>stage2 的 PD 控制</h4>
+<p><code>joint_position_ctrl()</code> 遍历 MuJoCo 执行器，根据执行器名称选择目标关节角，再计算：</p>
+<pre><code class="language-text">ctrl[i] = 40*(target-qpos) - 2*qvel</code></pre>
+<ul><li>站立：<code>HipY=-0.7</code>、<code>Knee=1.2</code>。</li><li>安全蹲伏：<code>HipY=-1.5</code>、<code>Knee=2.6</code>。</li><li>HipX：左腿 <code>0.1</code>，右腿 <code>-0.1</code>。</li></ul>
+<p>这里 <code>kp=40</code>、<code>kd=2</code>，与 stage1 的 PyBullet 位置控制参数不是同一接口。stage2 还把外力写入名为 <code>TORSO</code> 的机身刚体，而不是假定某个固定下标。</p>
+<h4>stage2 的输入与推力</h4>
+<table><thead><tr><th style="text-align:left">输入</th><th style="text-align:left">效果</th></tr></thead><tbody><tr><td style="text-align:left"><code>f</code></td><td style="text-align:left">所有几何体切向摩擦系数在 <code>0.02</code> 与 <code>0.8</code> 间切换</td></tr><tr><td style="text-align:left"><code>g</code></td><td style="text-align:left">世界重力 z 分量在 <code>0</code> 与 <code>-9.81</code> 间切换</td></tr><tr><td style="text-align:left"><code>v</code></td><td style="text-align:left">站立/安全蹲伏切换</td></tr><tr><td style="text-align:left"><code>p</code></td><td style="text-align:left">对 <code>TORSO</code> 施加 x 方向 150 N，持续 <code>0.15 s</code></td></tr><tr><td style="text-align:left"><code>r</code></td><td style="text-align:left">恢复默认环境并重置仿真数据</td></tr><tr><td style="text-align:left"><code>q</code></td><td style="text-align:left">退出</td></tr></tbody></table>
+<p>字母可以由 MuJoCo 查看器回调放入队列，也可以在终端输入后按回车。主循环每步只从队列取一个命令，因此不要在短时间内连续快速堆积多个字母。</p>
+<h4>摩擦、重力与接触</h4>
+<ul><li>摩擦系数影响接触处抵抗相对滑动的能力，低摩擦不直接改变重力方向。</li><li>零重力消除了维持站立所需的主要载荷，但不会自动把速度、位置或关节角清零。</li><li>接触对数是接触约束数量，不是“几只脚稳稳着地”的直接计数。</li><li>机器人发生摔倒后，单纯等待不会恢复站姿；应先按 <code>r</code> 再开始下一组对照。</li></ul>
+<h4>推力实验的公平比较</h4>
+<p>要比较两种引擎，至少应记录：</p>
+<ol><li>推力大小与方向；</li><li>作用点和作用对象；</li><li>持续时间与衰减规律；</li><li>实验开始时的姿态、速度和高度；</li><li>复位后到施力之间的等待时间。</li></ol>
+<p>本课程脚本的这些条件并不完全相同，所以结论应表述为“在当前脚本设置下观察到……”，不能泛化为“MuJoCo 一定比 PyBullet 更抗推”。</p>
+<h3>教师演示</h3>
+<h4>演示 1：PyBullet 基础站立与 trot</h4>
+<pre><code class="language-bash">cd ~/lite3_lab/simulation
+source .venv/bin/activate
+python3 stage1_pybullet.py</code></pre>
+<p>演示顺序：</p>
+<ol><li>保持站立，确认初始高度 <code>0.28</code>、默认站姿和接触日志。</li><li>点按 PyBullet 窗口后按上方向键，观察进入 trot；松开后回到站立。</li><li>按 <code>3</code> 切到阻尼，再切到安全蹲伏，比较机身高度。</li><li>按 <code>r</code> 复位，确认日志和模式恢复。</li><li>按空格施加 150 N，说明推力作用点和逐次衰减。</li></ol>
+<h4>演示 2：PyBullet 环境扰动</h4>
+<ol><li>按 <code>1</code> 切换低摩擦，再按方向键，观察脚底滑移。</li><li>复位后按 <code>2</code> 切换到零重力，再按 <code>3</code> 观察姿态变化。</li><li>再次复位，说明“先复位”可以避免上一组实验残留状态影响下一组。</li></ol>
+<h4>演示 3：MuJoCo 站立、蹲伏与输入线程</h4>
+<p>另开终端：</p>
+<pre><code class="language-bash">cd ~/lite3_lab/simulation
+source .venv/bin/activate
+python3 stage2_mujoco_lab.py</code></pre>
+<p>演示顺序：</p>
+<ol><li>在查看器或终端输入 <code>v</code>，比较站立与安全蹲伏。</li><li>输入 <code>f</code>、<code>g</code>，说明所有几何体摩擦与世界重力被修改。</li><li>输入 <code>p</code>，强调 150 N 持续 <code>0.15 s</code>，不是 stage1 的指数衰减。</li><li>输入 <code>r</code>，确认高度恢复为 <code>0.35</code> 且环境变量恢复默认。</li><li>输入 <code>q</code> 正常退出，避免直接关闭承载 ROS2 或查看器的终端。</li></ol>
+<h4>演示 4：从日志提取证据</h4>
+<p>指导学生定位以下日志字段：</p>
+<ul><li>stage1：<code>step</code>、<code>μ</code>、<code>g</code>、<code>接触对数</code>、<code>速度</code>。</li><li>stage2：<code>step</code>、<code>μ</code>、<code>g</code>、<code>接触对</code>、<code>模式</code>。</li></ul>
+<p>特别说明：日志中的“速度”在 stage1 是 <code>move_speed</code> 设定值，不是通过状态数组测得的真实底盘速度。</p>
+<h3>学生实操</h3>
+<h4>任务 1：基础操作清单</h4>
+<p>分别完成：</p>
+<ul><li>stage1：站立 → trot → 阻尼 → 安全蹲伏 → 复位 → 退出。</li><li>stage2：站立 → 蹲伏 → 低摩擦 → 零重力 → 推力 → 复位 → 退出。</li></ul>
+<p>每项操作记录键名、输入位置（窗口或终端）、画面变化和日志变化。</p>
+<h4>任务 2：单变量实验矩阵</h4>
+<p>每个引擎至少完成四组实验，严格按“复位 → 等待稳定 → 改变一个变量 → 观察 → 复位”的顺序。</p>
+<table><thead><tr><th style="text-align:left">引擎</th><th style="text-align:left">实验</th><th style="text-align:left">保持不变的量</th><th style="text-align:left">记录证据</th></tr></thead><tbody><tr><td style="text-align:left">PyBullet</td><td style="text-align:left">正常/低摩擦站立</td><td style="text-align:left">重力、模式、推力</td><td style="text-align:left">滑移、接触数、复位状态</td></tr><tr><td style="text-align:left">PyBullet</td><td style="text-align:left">正常/零重力</td><td style="text-align:left">摩擦、模式</td><td style="text-align:left">高度变化、脚部状态</td></tr><tr><td style="text-align:left">PyBullet</td><td style="text-align:left">站立/阻尼/蹲伏</td><td style="text-align:left">摩擦、重力</td><td style="text-align:left">姿态、高度</td></tr><tr><td style="text-align:left">PyBullet</td><td style="text-align:left">trot 前/后</td><td style="text-align:left">频率、地面</td><td style="text-align:left">对角相位、设定速度</td></tr><tr><td style="text-align:left">MuJoCo</td><td style="text-align:left">正常/低摩擦站立</td><td style="text-align:left">重力、模式</td><td style="text-align:left">接触数、滑移</td></tr><tr><td style="text-align:left">MuJoCo</td><td style="text-align:left">正常/零重力</td><td style="text-align:left">摩擦、模式</td><td style="text-align:left">高度变化</td></tr><tr><td style="text-align:left">MuJoCo</td><td style="text-align:left">站立/安全蹲伏</td><td style="text-align:left">摩擦、重力</td><td style="text-align:left">高度、PD 控制</td></tr><tr><td style="text-align:left">MuJoCo</td><td style="text-align:left">推力后恢复</td><td style="text-align:left">姿态、作用点</td><td style="text-align:left">偏移方向、恢复时间</td></tr></tbody></table>
+<h4>任务 3：步态相位分析</h4>
+<p>对 stage1 trot 回答：</p>
+<ol><li>FL 与哪些腿同相？</li><li>FR 与 HL 的相位差是多少？</li><li>膝关节在哪个半周期抬升？</li><li><code>vx</code> 改变时，HipY 目标中的哪一项随之改变？</li><li>为什么松开方向键后速度设定回零，但机器人可能仍因惯性短暂运动？</li></ol>
+<h4>任务 4：两份简短实验记录</h4>
+<p>每份记录包含：</p>
+<ul><li>引擎、脚本名、运行日期；</li><li>初始姿态和环境参数；</li><li>只改变的一个变量；</li><li>至少一个画面现象和一条日志证据；</li><li>复位操作及复位后的状态；</li><li>结论与不确定因素。</li></ul>
+<h3>思考题</h3>
+<ol><li>PyBullet 的 <code>POSITION_CONTROL</code> 与 stage2 的 PD 力矩计算有什么接口差异？</li><li>为什么阻尼模式适合观察被动耗散，而不适合作为主动行走控制器？</li><li>安全蹲伏为什么可能提高抗扰能力？是否意味着膝角越大越好？</li><li>零重力下接触对数下降是否说明摩擦也失效了？</li><li>为什么“150 N 推力”不能脱离持续时间、作用点和衰减规律来比较？</li><li>stage1 日志中的 <code>move_speed</code> 与真实速度有什么差别？</li><li>MuJoCo 输入线程为何只负责入队，而主循环负责执行命令？</li><li>如果每次实验前不复位，哪些变量可能残留并污染结论？</li></ol>
+<h3>验收标准</h3>
+<table><thead><tr><th style="text-align:left">验收项</th><th style="text-align:left">合格标准</th></tr></thead><tbody><tr><td style="text-align:left">启动与退出</td><td style="text-align:left">两个脚本均能独立启动，使用正确键位复位和退出</td></tr><tr><td style="text-align:left">行为识别</td><td style="text-align:left">正确说明 stage1 站立、trot、阻尼、安全蹲伏及 stage2 两种姿态</td></tr><tr><td style="text-align:left">控制接口</td><td style="text-align:left">能区分 PyBullet 位置控制与 MuJoCo 显式 PD 力矩</td></tr><tr><td style="text-align:left">参数识读</td><td style="text-align:left">正确写出两阶段站姿、PD 参数和推力差异</td></tr><tr><td style="text-align:left">单变量实验</td><td style="text-align:left">每个结论只归因于一个改变量，并包含复位步骤</td></tr><tr><td style="text-align:left">证据记录</td><td style="text-align:left">同时提供画面/状态现象与日志字段，不只写“稳定/不稳定”</td></tr><tr><td style="text-align:left">步态分析</td><td style="text-align:left">正确指出 FL/HR 同相、FR/HL 反相及膝抬升半周期</td></tr><tr><td style="text-align:left">安全习惯</td><td style="text-align:left">每组实验结束复位，不在模型摔倒后继续叠加扰动</td></tr></tbody></table>
+<h3>常见错误</h3>
+<ul><li><strong>方向键无效就反复按脚本内键</strong>：先点击 PyBullet 窗口获得焦点；stage1 与 stage2 键位体系不同。</li><li><strong>在 stage2 使用数字键切换摩擦/重力</strong>：stage2 使用 <code>f/g/v/p/r/q</code>。</li><li><strong>终端输入后没有回车</strong>：终端输入线程通过 <code>input()</code> 读取，需要回车；查看器字母回调不需要。</li><li><strong>同时运行两个 PyBullet/MuJoCo GUI 后混淆日志</strong>：给终端标注脚本名，只操作当前窗口。</li><li><strong>把 stage2 的 <code>40/2</code> 当成 stage3 的 PD 参数</strong>：stage3 使用 <code>30/1</code>，不能跨阶段照搬。</li><li><strong>把 150 N 当作相同冲量</strong>：stage1 逐步衰减，stage2 固定持续 0.15 秒，需分别分析。</li><li><strong>认为 <code>r</code> 只重置位置</strong>：它还会恢复摩擦、重力、控制模式和推力状态。</li><li><strong>用接触对数直接等于落脚数</strong>：接触点可能分布在同一脚掌或存在自碰撞接触。</li><li><strong>忽略真实速度与设定速度的区别</strong>：<code>move_speed</code> 只表示输入目标，不代表测量结果。</li><li><strong>在零重力或摔倒后继续同一实验</strong>：应先复位，否则后续姿态不可比。</li></ul>
+</section>
+<section class="view" id="view-ch3">
+<header class="chapter-head"><span class="chapter-num">03</span><h2>Lite3 强化学习部署实验</h2></header>
+<h3>学习目标</h3>
+<p>完成本单元后，学生应能够：</p>
+<ol><li>说明本实验部署的是训练好的 PPO ONNX 策略，而不是在课程中重新训练策略。</li><li>按顺序、缩放和数据类型正确构造 45 维观测。</li><li>解释 <code>R^T*(0,0,-1)</code> 投影重力为何能向策略提供机身倾斜信息。</li><li>正确使用部署默认关节角 <code>(0,-0.65,1.3)</code> 和动作缩放 <code>0.25</code>。</li><li>将 12 维策略动作转换为目标关节角，再用 <code>kp=30</code>、<code>kd=1</code> 计算并限幅电机力矩。</li><li>描述 ROS2 关节指令的数量校验、数值解析、有限值校验和 0.5 秒超时零力矩。</li><li>区分“策略部署”“脚本步态”“MIT 参数下发”和“真实机器人控制”。</li></ol>
+<h3>建议学时</h3>
+<p>建议 <strong>8 学时</strong>：教师演示 3 学时，学生实操与策略部署验收 5 学时。</p>
+<table><thead><tr><th style="text-align:left">活动</th><th style="text-align:right">学时</th></tr></thead><tbody><tr><td style="text-align:left">观测、重力投影与默认角板演</td><td style="text-align:right">1.5</td></tr><tr><td style="text-align:left">ONNX 推理与 PD 力矩演示</td><td style="text-align:right">1</td></tr><tr><td style="text-align:left">ROS2 校验与超时演示</td><td style="text-align:right">0.5</td></tr><tr><td style="text-align:left">单元测试与本地策略操作</td><td style="text-align:right">2</td></tr><tr><td style="text-align:left">ROS2 集成与故障复现</td><td style="text-align:right">2</td></tr><tr><td style="text-align:left">验收与答辩</td><td style="text-align:right">1</td></tr></tbody></table>
+<h3>先修知识</h3>
+<ul><li>理解旋转矩阵转置、四元数 <code>(w,x,y,z)</code> 和机体系/世界系。</li><li>理解 12 个关节在 <code>qpos/qvel</code> 中的地址和顺序。</li><li>理解 PD 力矩公式、关节位置偏差与执行器限幅。</li><li>了解 NumPy 数组的切片、拼接、类型转换和一维/二维形状。</li><li>ROS2 实验还需了解节点、话题、消息和 <code>source</code> 工作空间的基本操作。</li></ul>
+<h3>核心概念</h3>
+<h4>部署链路与控制周期</h4>
+<div class="diagram-scroll"><figure class="diagram"><svg viewBox="0 0 920 680" role="img" aria-labelledby="s-rl-title"><title id="s-rl-title">ONNX 策略从观测到电机力矩的部署链路</title><defs><marker id="s-rl-arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" style="fill:var(--accent)"/></marker></defs><g font-family="Helvetica,Arial,sans-serif" text-anchor="middle"><rect x="150" y="18" width="620" height="74" rx="14" style="fill:var(--accent-soft);stroke:var(--accent)"/><text x="460" y="49" font-size="22" style="fill:var(--ink)">读取 qpos / qvel 与速度指令</text><text x="460" y="75" font-size="16" style="fill:var(--ink-soft)">计算机体系投影重力 Rᵀ·(0,0,-1)</text><line x1="460" y1="94" x2="460" y2="126" stroke-width="3" style="stroke:var(--accent)" marker-end="url(#s-rl-arrow)"/><rect x="150" y="130" width="620" height="74" rx="14" style="fill:var(--paper);stroke:var(--line)"/><text x="460" y="161" font-size="22" style="fill:var(--ink)">构造 45 维 float32 观测</text><text x="460" y="187" font-size="16" style="fill:var(--ink-soft)">3 + 3 + 3 + 12 + 12 + 12</text><line x1="460" y1="206" x2="460" y2="238" stroke-width="3" style="stroke:var(--accent)" marker-end="url(#s-rl-arrow)"/><rect x="150" y="242" width="620" height="74" rx="14" style="fill:var(--accent-soft);stroke:var(--accent)"/><text x="460" y="273" font-size="22" style="fill:var(--ink)">ONNX 策略输出 12 维动作</text><text x="460" y="299" font-size="16" style="fill:var(--ink-soft)">原始 action 不是角度，也不是力矩</text><line x1="460" y1="318" x2="460" y2="350" stroke-width="3" style="stroke:var(--accent)" marker-end="url(#s-rl-arrow)"/><rect x="150" y="354" width="620" height="74" rx="14" style="fill:var(--paper);stroke:var(--line)"/><text x="460" y="385" font-size="22" style="fill:var(--ink)">target = default + 0.25 × action</text><text x="460" y="411" font-size="16" style="fill:var(--ink-soft)">default = (0, -0.65, 1.3) × 4</text><line x1="460" y1="430" x2="460" y2="462" stroke-width="3" style="stroke:var(--accent)" marker-end="url(#s-rl-arrow)"/><rect x="150" y="466" width="620" height="74" rx="14" style="fill:var(--accent-soft);stroke:var(--accent)"/><text x="460" y="497" font-size="22" style="fill:var(--ink)">PD 计算电机力矩并限幅</text><text x="460" y="523" font-size="16" style="fill:var(--ink-soft)">30·(target-qpos) - qvel</text><line x1="460" y1="542" x2="460" y2="574" stroke-width="3" style="stroke:var(--accent)" marker-end="url(#s-rl-arrow)"/><rect x="150" y="578" width="620" height="66" rx="14" style="fill:var(--paper);stroke:var(--accent-deep)"/><text x="460" y="607" font-size="22" style="fill:var(--accent-deep)">data.ctrl = tau → mj_step</text><text x="460" y="632" font-size="16" style="fill:var(--ink-soft)">下一帧观测使用上一帧原始动作</text></g></svg><figcaption>策略输出必须依次经过动作缩放和 PD 力矩转换；把 action 直接写入电机控制会改变整个部署语义。</figcaption></figure></div>
+<p><code>stage3_mujoco_rl.py</code> 每个仿真步执行以下链路：</p>
+<pre><code class="language-text">读取 qpos/qvel
+  → 计算机体系投影重力
+  → 拼接 45 维观测
+  → ONNX 输出 12 维动作
+  → target = default + 0.25 * action
+  → tau = PD(target, qpos, qvel) 并按执行器范围限幅
+  → data.ctrl = tau
+  → mj_step</code></pre>
+<p>策略通过 ONNX Runtime 的 <code>CPUExecutionProvider</code> 运行。脚本读取 ONNX 输入维度，若不是 45 会直接报错，避免在错误输入形状下继续推理。</p>
+<h4>45 维观测的精确顺序</h4>
+<p><code>build_observation()</code> 按以下顺序拼接，最终类型为 <code>float32</code>、形状为 <code>(45,)</code>：</p>
+<table><thead><tr><th style="text-align:left">切片索引</th><th style="text-align:left">内容</th><th style="text-align:right">维数</th><th style="text-align:left">缩放/处理</th></tr></thead><tbody><tr><td style="text-align:left"><code>obs[0:3]</code></td><td style="text-align:left">机身角速度</td><td style="text-align:right">3</td><td style="text-align:left">乘以 <code>0.25</code></td></tr><tr><td style="text-align:left"><code>obs[3:6]</code></td><td style="text-align:left">机体系投影重力</td><td style="text-align:right">3</td><td style="text-align:left">不缩放</td></tr><tr><td style="text-align:left"><code>obs[6:9]</code></td><td style="text-align:left">速度指令 <code>[vx,vy,vaw]</code></td><td style="text-align:right">3</td><td style="text-align:left">不缩放</td></tr><tr><td style="text-align:left"><code>obs[9:21]</code></td><td style="text-align:left">关节位置偏差 <code>q-default</code></td><td style="text-align:right">12</td><td style="text-align:left">不缩放</td></tr><tr><td style="text-align:left"><code>obs[21:33]</code></td><td style="text-align:left">关节速度</td><td style="text-align:right">12</td><td style="text-align:left">乘以 <code>0.05</code></td></tr><tr><td style="text-align:left"><code>obs[33:45]</code></td><td style="text-align:left">上一帧动作</td><td style="text-align:right">12</td><td style="text-align:left">不缩放</td></tr></tbody></table>
+<p>维度合计：</p>
+<pre><code class="language-text">3 + 3 + 3 + 12 + 12 + 12 = 45</code></pre>
+<p>“上一帧动作”指上一轮 ONNX 输出的原始动作，不是目标角，也不是已经限幅的力矩。初始化与复位时该数组为 12 维零向量；当前帧先构造观测，推理返回后才把 <code>action</code> 更新为新结果。</p>
+<p>各段长度由 <code>expected_sizes=(3,3,3,12,12,12)</code> 检查。即使总长度碰巧为 45，只要某一段长度错误，也应视为观测构造错误。</p>
+<h4>投影重力：<code>R^T*(0,0,-1)</code></h4>
+<p>策略不能直接读取“世界系重力”，而需要知道重力相对机身的方向。设 <code>R</code> 是机体系到世界系的旋转矩阵，则：</p>
+<pre><code class="language-text">g_body = R^T * g_world_direction = R^T * (0,0,-1)</code></pre>
+<p>两个必须掌握的结果：</p>
+<ul><li>机身水平、四元数为 <code>[1,0,0,0]</code> 时，<code>g_body=[0,0,-1]</code>。</li><li>绕 x 轴 <code>+90°</code>、四元数为 <code>[sqrt(0.5),sqrt(0.5),0,0]</code> 时，<code>g_body=[0,-1,0]</code>。</li></ul>
+<p>它让策略在身体侧倾、俯仰或翻滚时获得姿态相关信号。投影重力只是姿态线索之一，不能单独代替完整状态。</p>
+<h4>默认关节角与动作缩放</h4>
+<p>部署策略的默认模式为：</p>
+<pre><code class="language-text">DEFAULT_JOINT_PATTERN = [0.0, -0.65, 1.3]  # HipX, HipY, Knee
+default_qpos = [0.0,-0.65,1.3] × 4</code></pre>
+<p>结合 stage4 的编号约定，四组为 FL、FR、HL、HR；stage3 的实际读取仍由模型执行器与关节地址决定。动作与目标位置的关系为：</p>
+<pre><code class="language-text">target_qpos = default_qpos + ACTION_SCALE * action
+ACTION_SCALE = 0.25</code></pre>
+<p>例如默认角为 <code>-0.65</code>、策略输出该关节动作为 <code>0.4</code>，则目标角为：</p>
+<pre><code class="language-text">-0.65 + 0.25*0.4 = -0.55</code></pre>
+<p>这不是把实际关节角增加 <code>0.4</code>，也不是直接令电机输出 <code>0.4 N·m</code>。</p>
+<blockquote><p>不能使用 stage1/stage4 的 <code>HipY=-0.985</code>、<code>Knee=2.084</code> 替换 stage3 的部署默认角。策略的观测偏差和动作中心都建立在 <code>(0,-0.65,1.3)</code> 上。</p></blockquote>
+<h4>PD 力矩，而不是目标角度</h4>
+<p><code>Lite3.xml</code> 的执行器是电机，stage3 的 <code>data.ctrl</code> 需要力矩：</p>
+<pre><code class="language-text">tau = 30*(target_qpos-qpos) + 1*(0-qvel)</code></pre>
+<p>随后按每个执行器的 <code>model.actuator_ctrlrange</code> 逐元素裁剪。</p>
+<p>需要区分三个数组：</p>
+<table><thead><tr><th style="text-align:left">数组</th><th style="text-align:left">含义</th><th style="text-align:left">是否直接写入 <code>data.ctrl</code></th></tr></thead><tbody><tr><td style="text-align:left"><code>action</code></td><td style="text-align:left">ONNX 原始输出</td><td style="text-align:left">否</td></tr><tr><td style="text-align:left"><code>target_qpos</code></td><td style="text-align:left">默认角加缩放动作</td><td style="text-align:left">否</td></tr><tr><td style="text-align:left"><code>tau</code></td><td style="text-align:left">PD 计算并限幅后的力矩</td><td style="text-align:left">是</td></tr></tbody></table>
+<h4>本地键盘指令与复位</h4>
+<table><thead><tr><th style="text-align:left">键</th><th style="text-align:left">作用</th></tr></thead><tbody><tr><td style="text-align:left"><code>w</code></td><td style="text-align:left"><code>cmd_vx=0.6</code> 前进</td></tr><tr><td style="text-align:left"><code>s</code></td><td style="text-align:left"><code>cmd_vx=-0.4</code> 后退</td></tr><tr><td style="text-align:left"><code>a</code></td><td style="text-align:left"><code>cmd_vyaw=0.6</code> 左转</td></tr><tr><td style="text-align:left"><code>d</code></td><td style="text-align:left"><code>cmd_vyaw=-0.6</code> 右转</td></tr><tr><td style="text-align:left"><code>x</code></td><td style="text-align:left"><code>cmd_vx</code> 与 <code>cmd_vyaw</code> 清零</td></tr><tr><td style="text-align:left"><code>p</code></td><td style="text-align:left">触发侧向 150 N 推力</td></tr><tr><td style="text-align:left"><code>r</code></td><td style="text-align:left">重置模型数据、默认关节角、高度和动作</td></tr><tr><td style="text-align:left"><code>q</code></td><td style="text-align:left">退出</td></tr></tbody></table>
+<p>速度指令为 <code>[cmd_vx,cmd_vy,cmd_vyaw]</code>；本地键盘不会设置 <code>cmd_vy</code>，它始终保持 0。<code>w/s</code> 与 <code>a/d</code> 可以组合，<code>x</code> 同时停止线速度和转向。</p>
+<p><strong>重要细节：<code>r</code> 不复零速度指令。</strong> 它重置 <code>action</code> 和推力标志，但当前 <code>cmd_vx/cmd_vyaw</code> 保留。若希望复位后静止，应先按 <code>x</code>，再按 <code>r</code>。</p>
+<h4>ROS2 仿真：消息、校验与 MIT 力矩</h4>
+<p><code>stage3_mujoco_ros2_sim.py</code> 提供：</p>
+<ul><li>订阅 <code>/JOINTS_CMD</code>，消息类型为 <code>drdds.msg.JointsDataCmd</code>。</li><li>发布 <code>/JOINTS_DATA</code>，消息类型为 <code>drdds.msg.JointsData</code>。</li><li>每个关节指令字段顺序为 <code>[kp,kd,position,velocity,torque]</code>。</li></ul>
+<p>接收端依次检查：</p>
+<ol><li><code>len(joints_data) == model.nu</code>，当前应为 12；</li><li>能转换为 <code>float64</code> 数值矩阵；</li><li>所有字段都是有限值，即不含 <code>NaN</code> 或 <code>Inf</code>。</li></ol>
+<p>只有全部通过，才在锁保护下替换命令并更新时间戳。<strong>无效指令不会覆盖上一条有效指令，也不会刷新时间戳。</strong></p>
+<p>有效命令下发的力矩为：</p>
+<pre><code class="language-text">tau = kp*(position-q) + kd*(velocity-dq) + torque</code></pre>
+<p>这与本地 stage3 固定 <code>kp=30</code>、<code>kd=1</code>、速度目标为 0 的路径不同；ROS2 仿真允许命令携带增益、位置目标、速度目标和前馈力矩。</p>
+<p>当前代码只校验“关节数量、可解析性、有限值”，<strong>不校验增益、位置、速度或力矩是否超出安全幅值</strong>；ROS2 路径也没有调用本地 <code>pd_torque_control()</code> 的 <code>ctrlrange</code> 限幅。有限值合法不等于控制安全。</p>
+<h4>0.5 秒超时与状态发布</h4>
+<p>仿真器使用 <code>time.monotonic()</code> 记录最近一次<strong>有效</strong>命令时间：</p>
+<pre><code class="language-text">elapsed = now - last_valid_command_time
+若 elapsed &gt; 0.5 s：tau = 全零
+否则：按 MIT 公式计算 tau</code></pre>
+<ul><li>节点启动时就初始化时间戳，因此即使从未收到命令，也会在约 0.5 秒后进入零力矩状态。</li><li>正好等于 0.5 秒不必然触发，代码条件是严格大于 <code>0.5</code>。</li><li>无效消息持续到达不能“保活”；时间戳只对有效消息更新。</li><li>发布者停止后，最后一帧力矩最多被保持到超时判定，然后输出零力矩。</li><li><code>/JOINTS_DATA</code> 每 5 个仿真步发布一次，包含 12 个关节的位置和速度；主循环每次睡眠约 <code>0.002 s</code>。</li></ul>
+<p>零力矩是安全失效保护，不会让机器人自动恢复默认站姿；在重力作用下机器人可能下沉或摔倒。</p>
+<h4><code>stage3_ros2_node.py</code> 的当前状态</h4>
+<p>该文件的有效代码整体处于注释状态，没有可运行的节点 <code>main</code>。它保留了一段纯力矩正弦实验的历史草稿，<strong>不能作为当前 ROS2 控制入口</strong>。课程应使用：</p>
+<pre><code class="language-text">stage3_mujoco_ros2_sim.py（仿真）
++ stage4 的指令节点（命令来源）</code></pre>
+<h3>教师演示</h3>
+<h4>演示 1：单元测试与观测顺序</h4>
+<pre><code class="language-bash">cd ~/lite3_lab/simulation
+source .venv/bin/activate
+python3 -m unittest discover -s tests -v</code></pre>
+<p>6 个测试应全部通过。重点解释观测测试：</p>
+<ul><li><code>obs.shape == (45,)</code>；</li><li><code>obs.dtype == float32</code>；</li><li>六段切片的值和缩放完全符合预期。</li></ul>
+<h4>演示 2：本地 ONNX 策略</h4>
+<pre><code class="language-bash">python3 stage3_mujoco_rl.py</code></pre>
+<p>演示顺序：</p>
+<ol><li>启动后观察 45 维输入检查与关节地址建立。</li><li>按 <code>x</code> 后按 <code>r</code>，从静止开始。</li><li>依次按 <code>w/s/a/d/x</code>，每次记录命令设定和机器人响应。</li><li>按 <code>p</code> 观察侧向 150 N 扰动及衰减恢复。</li><li>先按 <code>x</code> 再按 <code>r</code>，说明命令不会随 <code>r</code> 自动清零。</li><li>按 <code>q</code> 退出。</li></ol>
+<h4>演示 3：ROS2 仿真启动即超时</h4>
+<p>先 source 正确的 ROS2 与 <code>drdds</code> 工作空间，再运行：</p>
+<pre><code class="language-bash">python3 stage3_mujoco_ros2_sim.py</code></pre>
+<p>不启动任何命令发布者，观察启动日志中的 0.5 秒说明。约 0.5 秒后，仿真器按零力矩执行。结合重力解释为什么“没有指令”并不等于“保持站姿”。</p>
+<h4>演示 4：有效与无效命令</h4>
+<ol><li>使用 stage4 的现有步态节点发送 12 关节有效命令，确认 <code>/JOINTS_DATA</code> 有反馈。</li><li>停止命令发布者，验证超时后零力矩。</li><li>在教师确认 <code>drdds</code> 消息的 YAML 层级后，用 <code>ros2 topic pub --once</code> 发送空 <code>joints_data</code>，观察“关节数量错误”警告。</li><li>如课堂环境具备 NaN/Inf 发送条件，发送非有限值并观察拒绝日志；不要修改项目源码来制造故障。</li></ol>
+<h3>学生实操</h3>
+<h4>任务 1：手写观测表</h4>
+<p>给每一段填入：名称、维数、切片范围、缩放、数据来源。完成后与 <code>tests/test_stage3_rl.py</code> 对照，确保 45 维顺序完全一致。</p>
+<h4>任务 2：默认角与力矩计算</h4>
+<ol><li>写出完整 12 维默认角。</li><li>分别给定正、负两种动作，计算目标角。</li><li>选择两个关节，计算 <code>30*(target-q)-qvel</code>。</li><li>给出手工限幅结果，并说明 <code>action/target/tau</code> 的区别。</li></ol>
+<h4>任务 3：本地策略操作记录</h4>
+<p>至少完成以下操作：</p>
+<ul><li><code>x → r</code> 静止复位；</li><li><code>w</code> 前进、<code>s</code> 后退、<code>a</code> 左转、<code>d</code> 右转；</li><li><code>x</code> 停止；</li><li><code>p</code> 扰动后恢复；</li><li>先保持速度命令再单独按 <code>r</code>，验证命令未被清零；</li><li>先 <code>x</code> 再 <code>r</code>，比较两次复位的差别。</li></ul>
+<h4>任务 4：ROS2 安全行为验证</h4>
+<p>在已 source 的 ROS2 环境中记录：</p>
+<table><thead><tr><th style="text-align:left">场景</th><th style="text-align:left">预期行为</th><th style="text-align:left">实际证据</th></tr></thead><tbody><tr><td style="text-align:left">启动后无命令</td><td style="text-align:left">约 0.5 秒后零力矩</td><td style="text-align:left">日志/仿真响应</td></tr><tr><td style="text-align:left">收到 12 关节有效命令</td><td style="text-align:left">更新时间戳，执行 MIT 公式</td><td style="text-align:left">关节反馈</td></tr><tr><td style="text-align:left">收到 11 个关节</td><td style="text-align:left">拒绝，保留旧命令与时间戳</td><td style="text-align:left">警告日志</td></tr><tr><td style="text-align:left">收到含 NaN/Inf 的命令</td><td style="text-align:left">拒绝，不刷新时间戳</td><td style="text-align:left">警告日志</td></tr><tr><td style="text-align:left">有效发布者停止</td><td style="text-align:left">超过 0.5 秒后零力矩</td><td style="text-align:left">关节响应</td></tr></tbody></table>
+<p>无法构造非法消息时，可以完成代码路径分析，但必须在报告中明确“未做端到端复现”，不能把未实验项目写成已验证。</p>
+<h4>任务 5：控制链答辩</h4>
+<p>用不超过 5 分钟说明：</p>
+<pre><code class="language-text">观测为何是 45 维
+→ 动作为何先变成目标角
+→ 目标角为何必须经过 PD
+→ ROS2 指令为何要校验和超时</code></pre>
+<h3>思考题</h3>
+<ol><li>为什么策略输入关节位置偏差，而不是直接输入绝对关节角？</li><li><code>obs[33:45]</code> 为什么保存上一帧原始动作，而不是上一帧力矩？</li><li>如果把 <code>R^T</code> 写成 <code>R</code>，水平姿态下测试能否发现？倾斜姿态下会怎样？</li><li>默认角 <code>(0,-0.65,1.3)</code> 在观测和目标角计算中分别起什么作用？</li><li>为什么把 <code>target_qpos</code> 直接写入 <code>data.ctrl</code> 是概念错误？</li><li><code>r</code> 为什么没有清除速度命令？正确的静止复位顺序是什么？</li><li>无效 ROS2 指令为什么不刷新时间戳？如果刷新会发生什么风险？</li><li>有限值校验能否防止过大 <code>kp</code> 或力矩？当前代码还缺少什么保护？</li><li>0.5 秒零力矩能否替代主动站立控制？</li></ol>
+<h3>验收标准</h3>
+<table><thead><tr><th style="text-align:left">验收项</th><th style="text-align:left">合格标准</th></tr></thead><tbody><tr><td style="text-align:left">单元测试</td><td style="text-align:left">6 项测试全部通过，能解释每项检查内容</td></tr><tr><td style="text-align:left">观测</td><td style="text-align:left">45 维、<code>float32</code>、六段顺序及缩放完全正确</td></tr><tr><td style="text-align:left">重力投影</td><td style="text-align:left">水平为 <code>[0,0,-1]</code>，x 轴 <code>+90°</code> 为 <code>[0,-1,0]</code></td></tr><tr><td style="text-align:left">默认角</td><td style="text-align:left"><code>[0,-0.65,1.3]</code> 重复 4 次，并说明部署零位作用</td></tr><tr><td style="text-align:left">PD</td><td style="text-align:left">给定样例得到 <code>[13,-26]</code>，限幅后得到 <code>[10,-5]</code></td></tr><tr><td style="text-align:left">动作链</td><td style="text-align:left">明确 <code>action → target → tau → data.ctrl</code>，不混淆目标角与力矩</td></tr><tr><td style="text-align:left">本地操作</td><td style="text-align:left">正确演示 <code>x/r</code> 顺序及 <code>r</code> 不清速度命令的行为</td></tr><tr><td style="text-align:left">ROS2 校验</td><td style="text-align:left">正确说明 12 关节、可解析、全有限值三项条件</td></tr><tr><td style="text-align:left">超时</td><td style="text-align:left">正确说明有效命令时间戳与严格 <code>&gt;0.5 s</code> 零力矩</td></tr><tr><td style="text-align:left">安全边界</td><td style="text-align:left">明确 ROS2 路径未做幅值限幅，零力矩不等于自动站稳</td></tr></tbody></table>
+<h3>常见错误</h3>
+<ul><li><strong>把观测段顺序写错但只检查总长度</strong>：ONNX 可能仍接受输入，但策略语义完全错误。</li><li><strong>把角速度或关节速度的缩放漏掉</strong>：分别是 <code>0.25</code> 和 <code>0.05</code>。</li><li><strong>把动作当作已经乘过 <code>0.25</code></strong>：目标角计算时才乘动作缩放。</li><li><strong>沿用 stage1/2 的默认角</strong>：stage3 固定使用 <code>(0,-0.65,1.3)</code>。</li><li><strong>把 <code>target_qpos</code> 直接写入 <code>data.ctrl</code></strong>：该执行器需要力矩。</li><li><strong>只写比例项、漏掉速度阻尼</strong>：会改变动态响应并可能导致振荡。</li><li><strong>误以为 <code>r</code> 会清除速度命令</strong>：应先 <code>x</code> 再 <code>r</code>。</li><li><strong>用 <code>stage3_ros2_node.py</code> 启动实验</strong>：文件整体被注释，没有有效运行入口。</li><li><strong>把非法消息到达当作“仍在线”</strong>：只有有效命令更新时间戳。</li><li><strong>把 0.5 秒超时理解为固定关闭电机电源</strong>：代码是在仿真主循环输出全零力矩。</li><li><strong>认为有限值检查就是安全限幅</strong>：当前 ROS2 路径没有幅值检查和 <code>ctrlrange</code> 裁剪。</li><li><strong>忽略 ROS2 source</strong>：<code>rclpy</code> 或 <code>drdds</code> 导入失败通常与工作空间环境有关，不应修改课程脚本绕过。</li></ul>
+</section>
+<section class="view" id="view-ch4">
+<header class="chapter-head"><span class="chapter-num">04</span><h2>Lite3 的 ROS2 与 LiDAR 实验</h2></header>
+<h3>学习目标</h3>
+<p>完成本单元后，学生应能够：</p>
+<ol><li>搭建 stage4 的 <code>/cmd_vel → /JOINTS_CMD → /JOINTS_DATA</code> ROS2 控制链。</li><li>说明键盘、步态转换节点和 MuJoCo 仿真节点各自的职责与发布频率。</li><li>正确启动 stage4 的两个替代控制器之一，避免多发布者争抢同一话题。</li><li>识别 stage5 发布的 <code>/lidar_points</code>、<code>/ground_truth_odom</code>、TF 和 <code>/dog_body</code>。</li><li>说明 stage5 的点云生成方式、坐标系和发布周期。</li><li>明确 stage5 只是 LiDAR/SLAM 数据前端，发布仿真真值，不执行建图、定位或回环。</li><li>根据话题列表、订阅关系、TF 和日志排查通信故障。</li></ol>
+<h3>建议学时</h3>
+<p>建议 <strong>6 学时</strong>：教师演示 2 学时，学生实操 4 学时。</p>
+<table><thead><tr><th style="text-align:left">活动</th><th style="text-align:right">学时</th></tr></thead><tbody><tr><td style="text-align:left">ROS2 控制链与节点频率</td><td style="text-align:right">1</td></tr><tr><td style="text-align:left">stage4 键盘/控制器/仿真联调</td><td style="text-align:right">1</td></tr><tr><td style="text-align:left">stage5 数据前端观察</td><td style="text-align:right">1.5</td></tr><tr><td style="text-align:left">话题、TF 与边界验收</td><td style="text-align:right">1.5</td></tr><tr><td style="text-align:left">故障排查与课堂总结</td><td style="text-align:right">1</td></tr></tbody></table>
+<h3>先修知识</h3>
+<ul><li>了解 ROS2 节点、话题、发布者、订阅者、消息类型和 TF。</li><li>能在每个新终端中 source ROS2 及 <code>drdds</code> 消息包所在工作空间。</li><li>理解 <code>/cmd_vel</code> 的 <code>linear.x</code>、<code>angular.z</code> 含义。</li><li>理解 stage3 的 12 关节指令、PD/MIT 力矩与 0.5 秒超时。</li><li>了解 PointCloud2、Odometry、TransformStamped 和 Marker 的基本作用。</li><li>具备基本 Linux 终端操作能力，stage4 键盘和 stage5 都需要交互式 TTY。</li></ul>
+<h3>核心概念</h3>
+<h4>stage4 控制链</h4>
+<div class="diagram-scroll"><figure class="diagram"><svg viewBox="0 0 920 700" role="img" aria-labelledby="s-ros-title"><title id="s-ros-title">ROS2 键盘到 MuJoCo 仿真控制链</title><defs><marker id="s-ros-arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" style="fill:var(--accent)"/></marker></defs><g font-family="Helvetica,Arial,sans-serif" text-anchor="middle"><rect x="150" y="20" width="620" height="76" rx="14" style="fill:var(--accent-soft);stroke:var(--accent)"/><text x="460" y="52" font-size="22" style="fill:var(--ink)">键盘节点</text><text x="460" y="78" font-size="16" style="fill:var(--ink-soft)">20 Hz · Twist · /cmd_vel</text><line x1="460" y1="98" x2="460" y2="132" stroke-width="3" style="stroke:var(--accent)" marker-end="url(#s-ros-arrow)"/><rect x="150" y="136" width="620" height="88" rx="14" style="fill:var(--paper);stroke:var(--accent)"/><text x="460" y="168" font-size="22" style="fill:var(--ink)">步态转换节点（二选一）</text><text x="460" y="194" font-size="16" style="fill:var(--ink-soft)">walk_sim：50 Hz 或 controller：500 Hz</text><text x="460" y="216" font-size="15" style="fill:var(--accent-deep)">同一时刻只能有一个 /JOINTS_CMD 发布者</text><line x1="460" y1="226" x2="460" y2="260" stroke-width="3" style="stroke:var(--accent)" marker-end="url(#s-ros-arrow)"/><rect x="150" y="264" width="620" height="88" rx="14" style="fill:var(--accent-soft);stroke:var(--accent)"/><text x="460" y="296" font-size="22" style="fill:var(--ink)">MuJoCo 仿真节点</text><text x="460" y="322" font-size="16" style="fill:var(--ink-soft)">校验 12 关节、可解析、全有限</text><text x="460" y="344" font-size="15" style="fill:var(--accent-deep)">无效消息不刷新最近有效命令时间</text><line x1="460" y1="354" x2="460" y2="388" stroke-width="3" style="stroke:var(--accent)" marker-end="url(#s-ros-arrow)"/><rect x="150" y="392" width="620" height="88" rx="14" style="fill:var(--paper);stroke:var(--line)"/><text x="460" y="424" font-size="22" style="fill:var(--ink)">MIT 力矩或超时零力矩</text><text x="460" y="450" font-size="16" style="fill:var(--ink-soft)">kp·(position-q) + kd·(velocity-dq) + torque</text><text x="460" y="472" font-size="15" style="fill:var(--accent-deep)">0.5 s 无新有效命令 → tau = 0</text><line x1="460" y1="482" x2="460" y2="516" stroke-width="3" style="stroke:var(--accent)" marker-end="url(#s-ros-arrow)"/><rect x="150" y="520" width="620" height="76" rx="14" style="fill:var(--accent-soft);stroke:var(--accent)"/><text x="460" y="552" font-size="22" style="fill:var(--ink)">/JOINTS_DATA 状态反馈</text><text x="460" y="578" font-size="16" style="fill:var(--ink-soft)">每 5 个仿真步发布一次</text><rect x="150" y="624" width="620" height="48" rx="12" style="fill:var(--paper);stroke:var(--accent-deep)"/><text x="460" y="655" font-size="17" style="fill:var(--accent-deep)">键盘停车与仿真器超时是两层独立保护</text></g></svg><figcaption>键盘停止、转换节点停发和仿真器超时作用于不同层级；任何一层单独失效，都不能替代其余两层。</figcaption></figure></div>
+<p>推荐的控制链为：</p>
+<pre><code class="language-text">键盘节点 stage4_ros2_keyboard.py
+    │ Twist, /cmd_vel
+    ▼
+步态转换节点（walk_sim 或 controller 二选一）
+    │ JointsDataCmd, /JOINTS_CMD
+    ▼
+MuJoCo 仿真 stage3_mujoco_ros2_sim.py
+    │ JointsData, /JOINTS_DATA
+    ▼
+状态观察/反馈</code></pre>
+<p>每个节点有独立职责：</p>
+<ul><li><strong>键盘节点</strong>只生成速度命令；</li><li><strong>步态转换节点</strong>把速度命令转换为 12 个关节的 MIT 参数；</li><li><strong>仿真节点</strong>校验并执行关节指令，同时发布关节状态。</li></ul>
+<h4>stage4 的频率与停止语义</h4>
+<table><thead><tr><th style="text-align:left">组件</th><th style="text-align:right">周期</th><th style="text-align:left">注意事项</th></tr></thead><tbody><tr><td style="text-align:left"><code>stage4_ros2_keyboard.py</code></td><td style="text-align:right"><code>0.05 s</code>，20 Hz</td><td style="text-align:left">W/S/A/D/空格；停止按键输入 1 秒后自动把速度命令清零</td></tr><tr><td style="text-align:left"><code>stage4_ros2_walk_sim.py</code></td><td style="text-align:right"><code>0.02 s</code>，50 Hz</td><td style="text-align:left">无 MuJoCo 窗口；停止时把内部步态时间 <code>t</code> 清零</td></tr><tr><td style="text-align:left"><code>stage4_ros2_controller.py</code></td><td style="text-align:right"><code>0.002 s</code>，500 Hz</td><td style="text-align:left">无 MuJoCo 窗口；时间持续递增，停止时只把相位设为 0</td></tr><tr><td style="text-align:left"><code>stage3_mujoco_ros2_sim.py</code></td><td style="text-align:right">每次循环约 <code>0.002 s</code></td><td style="text-align:left">每 5 步发布一次关节状态；0.5 秒无有效关节命令则零力矩</td></tr></tbody></table>
+<p>键盘的 1 秒自动停车与仿真器的 0.5 秒超时是两个不同机制：</p>
+<ul><li>前者让键盘在无输入后持续发布零 <code>/cmd_vel</code>；</li><li>后者让仿真器在没有新的有效 <code>/JOINTS_CMD</code> 时输出零力矩。</li></ul>
+<p>如果直接杀掉键盘进程，步态转换节点可能保留最后收到的 <code>/cmd_vel</code> 并继续发布关节命令。因此安全停止应先按空格，再结束进程；不要只关闭键盘终端。</p>
+<h4>两个 stage4 转换节点只能二选一</h4>
+<p><code>stage4_ros2_walk_sim.py</code> 与 <code>stage4_ros2_controller.py</code> 都发布 <code>/JOINTS_CMD</code>。同时启动会产生两个发布者，机器人会收到交错的两套步态命令。</p>
+<table><thead><tr><th style="text-align:left">行为</th><th style="text-align:left"><code>stage4_ros2_walk_sim.py</code></th><th style="text-align:left"><code>stage4_ros2_controller.py</code></th></tr></thead><tbody><tr><td style="text-align:left">停止时</td><td style="text-align:left"><code>t=0</code>、相位归零</td><td style="text-align:left">相位归零，但 <code>t</code> 继续增加</td></tr><tr><td style="text-align:left">转向 HipY 修正</td><td style="text-align:left">左右腿分别加 <code>±0.1*wz</code></td><td style="text-align:left">所有 HipY 统一加 <code>+0.1</code> 或 <code>-0.1</code></td></tr><tr><td style="text-align:left">抬膝半周期</td><td style="text-align:left">根据 <code>vx</code> 正负选择 <code>sin(p)</code> 或 <code>-sin(p)</code></td><td style="text-align:left">固定使用 <code>max(0,-sin(p))</code></td></tr><tr><td style="text-align:left">发布频率</td><td style="text-align:left">50 Hz</td><td style="text-align:left">500 Hz</td></tr></tbody></table>
+<p>两者都使用基础站姿 <code>HipY=-0.985</code>、<code>Knee=2.084</code>、左右 HipX 为 <code>±0.1</code>，并下发：</p>
+<pre><code class="language-text">kp = 40
+kd = 2
+position = target
+torque = 0</code></pre>
+<p>这是脚本式步态，不是 stage3 的 ONNX 强化学习策略。节点名中的“无窗口”只表示转换节点自身不打开 MuJoCo 查看器，仿真节点仍会打开查看器。</p>
+<h4>ROS2 关节指令校验回顾</h4>
+<p><code>stage3_mujoco_ros2_sim.py</code> 只接受：</p>
+<ol><li>恰好 <code>model.nu</code> 个关节，当前为 12；</li><li>能解析为数值的 <code>[kp,kd,position,velocity,torque]</code>；</li><li>所有数值均有限。</li></ol>
+<p>有效命令的力矩为：</p>
+<pre><code class="language-text">tau = kp*(position-q) + kd*(velocity-dq) + torque</code></pre>
+<p>无效消息被拒绝且不更新时间戳。超过 0.5 秒没有新的有效消息时，仿真器输出 12 维全零力矩。</p>
+<h4>stage5 的节点边界</h4>
+<p><code>stage5_lidar_frontend_sim.py</code> 是独立的 MuJoCo + ROS2 数据前端：</p>
+<ul><li>它<strong>不订阅</strong> <code>/cmd_vel</code> 或 <code>/JOINTS_CMD</code>；</li><li>键盘 <code>w/s/a/d/空格</code> 在节点内部直接设置 <code>vx/wz</code>；</li><li>它自行计算 12 关节 PD 力矩，<code>kp=40</code>、<code>kd=2</code>；</li><li>它不调用 ONNX，也不运行 stage4 的步态转换节点。</li></ul>
+<p>因此，在 stage5 中启动键盘遥控或 stage4 控制器不会形成预期控制链。stage5 的键盘速度大小为 <code>0.3</code>，与 stage4 键盘的 <code>0.5</code> 也不同。</p>
+<h4>stage5 发布内容</h4>
+<table><thead><tr><th style="text-align:left">输出</th><th style="text-align:left">类型</th><th style="text-align:left">坐标系/内容</th></tr></thead><tbody><tr><td style="text-align:left"><code>/lidar_points</code></td><td style="text-align:left"><code>sensor_msgs/PointCloud2</code></td><td style="text-align:left"><code>world</code> 系中的命中点，字段为 <code>x,y,z</code></td></tr><tr><td style="text-align:left"><code>/ground_truth_odom</code></td><td style="text-align:left"><code>nav_msgs/Odometry</code></td><td style="text-align:left"><code>world</code> 系机身真值位姿</td></tr><tr><td style="text-align:left">TF</td><td style="text-align:left"><code>TransformStamped</code></td><td style="text-align:left"><code>world → base_link</code> 真值变换</td></tr><tr><td style="text-align:left"><code>/dog_body</code></td><td style="text-align:left"><code>visualization_msgs/Marker</code></td><td style="text-align:left"><code>world</code> 系红色立方体，跟随机身位姿</td></tr></tbody></table>
+<p>里程计和 TF 都直接读取 <code>data.qpos[0:7]</code>，不是通过传感器估计得到的。当前 Odometry 主要填写位姿，没有主动填充速度 twist 和协方差。</p>
+<h4>理想 LiDAR 点云如何生成</h4>
+<p>每次发布时，节点：</p>
+<ol><li>以机身位置上方 <code>0.2 m</code> 为雷达原点；</li><li>用机身四元数把局部射线方向旋转到世界系；</li><li>在 4 个垂直角 <code>[-15°,-5°,5°,15°]</code> 与 36 个水平角 <code>[0°,10°,…,350°]</code> 上发射射线；</li><li>使用 <code>mujoco.mj_ray</code> 求首个命中距离；</li><li>只保留 <code>0 &lt; distance &lt; 15 m</code> 的命中点；</li><li>打包为 <code>world</code> 系的 PointCloud2。</li></ol>
+<p>理想情况下最多有 <code>4×36=144</code> 条射线方向，但只有发生有效命中的方向才产生点。若当前没有点，节点不会发布空点云消息。噪声代码处于注释状态，默认没有模拟运动畸变或随机噪声。</p>
+<p>点云表达为世界系坐标，点云消息本身不携带雷达安装外参。若接入期望 <code>lidar</code> 或 <code>sensor_frame</code> 坐标的外部系统，需要额外提供坐标变换，这已超出当前脚本范围。</p>
+<h4>发布节奏与课程边界</h4>
+<div class="diagram-scroll"><figure class="diagram"><svg viewBox="0 0 880 430" role="img" aria-labelledby="s-stage5-title"><title id="s-stage5-title">stage5 数据前端与 SLAM 算法边界</title><g font-family="Helvetica,Arial,sans-serif"><rect x="34" y="38" width="360" height="280" rx="18" style="fill:var(--accent-soft);stroke:var(--accent)"/><rect x="486" y="38" width="360" height="280" rx="18" style="fill:var(--paper);stroke:var(--line)"/><text x="214" y="82" text-anchor="middle" font-size="25" style="fill:var(--ink)">stage5 提供</text><text x="214" y="132" text-anchor="middle" font-size="18" style="fill:var(--ink-soft)">LiDAR 点云</text><text x="214" y="174" text-anchor="middle" font-size="18" style="fill:var(--ink-soft)">真值里程计与 TF</text><text x="214" y="216" text-anchor="middle" font-size="18" style="fill:var(--ink-soft)">机身 Marker</text><text x="214" y="270" text-anchor="middle" font-size="17" style="fill:var(--accent-deep)">外部系统的输入与真值参照</text><text x="666" y="82" text-anchor="middle" font-size="25" style="fill:var(--ink)">stage5 不提供</text><text x="666" y="132" text-anchor="middle" font-size="18" style="fill:var(--ink-soft)">地图与扫描匹配</text><text x="666" y="174" text-anchor="middle" font-size="18" style="fill:var(--ink-soft)">定位与位姿图</text><text x="666" y="216" text-anchor="middle" font-size="18" style="fill:var(--ink-soft)">回环与估计轨迹</text><text x="666" y="270" text-anchor="middle" font-size="17" style="fill:var(--accent-deep)">不能把真值当作 SLAM 输出</text><text x="440" y="166" text-anchor="middle" font-size="42" style="fill:var(--accent)">≠</text><line x1="90" y1="350" x2="790" y2="350" style="stroke:var(--line)"/><text x="440" y="390" text-anchor="middle" font-size="18" style="fill:var(--ink-soft)">前端产生数据；SLAM 算法仍需另外实现。</text></g></svg><figcaption>真值里程计可以评测外部 SLAM，但它本身就是仿真器直接给出的，不能冒充定位算法结果。</figcaption></figure></div>
+<p>主循环每次睡眠约 <code>0.002 s</code>，每 50 步发布一次点云、里程计、TF 和 Marker。若模型时间步为 <code>0.002 s</code>，名义频率约为 10 Hz，但实际间隔还受运行负载影响。</p>
+<p>必须明确：</p>
+<blockquote><p>stage5 不是 SLAM。它只模拟 LiDAR 数据前端，并发布仿真真值里程计和 TF；不建立地图、不做定位、不做扫描匹配、不构建位姿图、不做回环，也不发布 SLAM 估计轨迹。</p></blockquote>
+<p>真值数据可用于外部 SLAM 的输入、可视化和误差评测，但不能把 <code>/ground_truth_odom</code> 当作算法输出。</p>
+<h3>教师演示</h3>
+<h4>演示 1：启动三节点控制链</h4>
+<p>以下命令中的 ROS2 setup 路径需按机房实际环境替换。每个新终端都要重新 source：</p>
+<pre><code class="language-bash">source /opt/ros/&lt;发行版&gt;/setup.bash
+source &lt;工作空间&gt;/install/setup.bash
+cd ~/lite3_lab/simulation
+source .venv/bin/activate</code></pre>
+<p>终端 1：</p>
+<pre><code class="language-bash">python3 stage3_mujoco_ros2_sim.py</code></pre>
+<p>终端 2（选择一个，不要同时运行）：</p>
+<pre><code class="language-bash">python3 stage4_ros2_walk_sim.py</code></pre>
+<p>或：</p>
+<pre><code class="language-bash">python3 stage4_ros2_controller.py</code></pre>
+<p>终端 3：</p>
+<pre><code class="language-bash">python3 stage4_ros2_keyboard.py</code></pre>
+<h4>演示 2：观察键盘与停止行为</h4>
+<ol><li>键盘终端不需要回车，按 <code>w/s/a/d</code> 观察 <code>/cmd_vel</code> 日志。</li><li>按空格，确认线速度和角速度清零。</li><li>松开所有键，观察 1 秒后键盘自动发布停车命令。</li><li>结束步态转换节点，再按键盘；解释最后命令可能被转换节点保留。</li><li>重新启动转换节点，验证 <code>/JOINTS_DATA</code> 反馈恢复。</li></ol>
+<h4>演示 3：话题与 TF 检查</h4>
+<p>在已 source 的第 4 个终端执行：</p>
+<pre><code class="language-bash">ros2 topic list
+ros2 topic info /cmd_vel --verbose
+ros2 topic info /JOINTS_CMD --verbose
+ros2 topic echo /JOINTS_DATA --once
+ros2 run tf2_ros tf2_echo world base_link</code></pre>
+<p>让学生根据发布/订阅关系判断链路断在哪一段，而不是只根据“机器人不动”猜原因。</p>
+<h4>演示 4：stage5 数据前端</h4>
+<p>先停止上述三个节点，避免资源与关节控制冲突。然后运行：</p>
+<pre><code class="language-bash">python3 stage5_lidar_frontend_sim.py</code></pre>
+<p>操作 <code>w/s/a/d/空格</code>，并在另一个已 source 的终端检查：</p>
+<pre><code class="language-bash">ros2 topic list
+ros2 topic hz /lidar_points
+ros2 topic echo /ground_truth_odom --once
+ros2 topic echo /lidar_points --once --field width
+ros2 run tf2_ros tf2_echo world base_link</code></pre>
+<p>若机房安装了 RViz2，可把 <code>/lidar_points</code>、<code>/dog_body</code> 和 <code>world → base_link</code> 加入同一场景；没有 RViz2 不影响课程验收，因为话题和 TF 命令已足以检查数据。</p>
+<h3>学生实操</h3>
+<h4>任务 1：绘制并验证控制图</h4>
+<p>画出三个节点的名称、输入话题、输出话题和周期。使用 <code>ros2 topic info</code> 验证每条边，特别检查：</p>
+<ul><li><code>/cmd_vel</code> 是否只有一个步态转换订阅者；</li><li><code>/JOINTS_CMD</code> 是否只有一个预期发布者；</li><li><code>/JOINTS_DATA</code> 是否持续产生。</li></ul>
+<h4>任务 2：比较两个 stage4 转换节点</h4>
+<p>在相同 <code>/cmd_vel</code> 下分别运行 <code>walk_sim</code> 与 <code>controller</code>，记录：</p>
+<table><thead><tr><th style="text-align:left">对比项</th><th style="text-align:left">walk_sim</th><th style="text-align:left">controller</th></tr></thead><tbody><tr><td style="text-align:left">定时器周期</td><td style="text-align:left"></td><td style="text-align:left"></td></tr><tr><td style="text-align:left">停止时 <code>t</code> 的处理</td><td style="text-align:left"></td><td style="text-align:left"></td></tr><tr><td style="text-align:left">转向 HipY 修正</td><td style="text-align:left"></td><td style="text-align:left"></td></tr><tr><td style="text-align:left">抬膝规则</td><td style="text-align:left"></td><td style="text-align:left"></td></tr><tr><td style="text-align:left">日志中位置目标的变化</td><td style="text-align:left"></td><td style="text-align:left"></td></tr></tbody></table>
+<p>测试时必须串行运行，不能同时启动两个发布者。</p>
+<h4>任务 3：停止与超时复现</h4>
+<ol><li>先按空格，确认机器人收到停车命令。</li><li>结束步态转换节点但保持仿真运行，观察 0.5 秒后进入零力矩。</li><li>重启转换节点，确认新的有效命令刷新时间戳。</li><li>记录“键盘停车”和“仿真超时”两条日志链路，说明二者不能互相替代。</li></ol>
+<h4>任务 4：stage5 数据检查</h4>
+<table><thead><tr><th style="text-align:left">检查项</th><th style="text-align:left">预期结果</th><th style="text-align:left">实际记录</th></tr></thead><tbody><tr><td style="text-align:left"><code>/lidar_points</code></td><td style="text-align:left">有发布者；运动时可出现点云</td><td style="text-align:left"></td></tr><tr><td style="text-align:left">点云坐标</td><td style="text-align:left"><code>x,y,z</code> 为 <code>world</code> 系坐标</td><td style="text-align:left"></td></tr><tr><td style="text-align:left"><code>/ground_truth_odom</code></td><td style="text-align:left"><code>world</code> 系位姿随仿真变化</td><td style="text-align:left"></td></tr><tr><td style="text-align:left">TF</td><td style="text-align:left"><code>world → base_link</code> 与机身真值一致</td><td style="text-align:left"></td></tr><tr><td style="text-align:left"><code>/dog_body</code></td><td style="text-align:left">红色 Marker 与机身位姿一致</td><td style="text-align:left"></td></tr><tr><td style="text-align:left">地图/定位结果</td><td style="text-align:left">当前脚本没有发布</td><td style="text-align:left"></td></tr></tbody></table>
+<h4>任务 5：边界说明</h4>
+<p>用三句话向同学解释：</p>
+<ol><li>stage5 接收什么输入；</li><li>stage5 发布什么数据；</li><li>外部 SLAM 还需要额外完成什么。</li></ol>
+<p>验收时不能只说“stage5 做了 SLAM 前端”，必须具体说出真值来源、点云坐标系，以及未实现的建图/定位/回环。</p>
+<h3>思考题</h3>
+<ol><li>为什么 stage4 的两个转换节点不能同时运行？</li><li>键盘的 1 秒自动停车和仿真器的 0.5 秒超时有何区别？</li><li>如果 <code>/cmd_vel</code> 有发布者但没有订阅者，问题更可能在哪个节点？</li><li>如果 <code>/JOINTS_CMD</code> 有数据但 <code>/JOINTS_DATA</code> 没有，应该检查哪些运行条件？</li><li>为什么 stage5 不订阅 <code>/cmd_vel</code>，却能响应 <code>w/s/a/d</code>？</li><li>为什么点云消息可能暂时不出现，而不是发布一个空点云？</li><li>将点云放在 <code>world</code> 系对外部 SLAM 有什么便利和限制？</li><li><code>/ground_truth_odom</code> 为什么不能作为 SLAM 算法的定位结果？</li><li>当前脚本没有发布 <code>/clock</code> 或雷达安装 TF，对外部系统集成可能有什么影响？</li></ol>
+<h3>验收标准</h3>
+<table><thead><tr><th style="text-align:left">验收项</th><th style="text-align:left">合格标准</th></tr></thead><tbody><tr><td style="text-align:left">节点职责</td><td style="text-align:left">正确说明键盘、步态转换、仿真执行的职责边界</td></tr><tr><td style="text-align:left">话题链</td><td style="text-align:left"><code>/cmd_vel</code> 与 <code>/JOINTS_CMD</code> 发布/订阅关系正确，<code>/JOINTS_DATA</code> 有反馈</td></tr><tr><td style="text-align:left">启动方式</td><td style="text-align:left">每个终端都 source 正确环境，键盘与 stage5 在交互式 TTY 运行</td></tr><tr><td style="text-align:left">单发布者</td><td style="text-align:left">同一时间只运行一个 stage4 关节命令转换节点</td></tr><tr><td style="text-align:left">停止机制</td><td style="text-align:left">能分别演示键盘空格、1 秒自动停车、仿真 0.5 秒超时</td></tr><tr><td style="text-align:left">stage5 输出</td><td style="text-align:left">识别点云、真值里程计、TF 和 Marker 的坐标系及来源</td></tr><tr><td style="text-align:left">点云理解</td><td style="text-align:left">知道 4×36 条射线、15 m 有效距离和“无命中不发布”的规则</td></tr><tr><td style="text-align:left">课程边界</td><td style="text-align:left">明确 stage5 不建图、不定位、不回环，不发布 SLAM 估计</td></tr><tr><td style="text-align:left">排查能力</td><td style="text-align:left">能用话题列表、话题信息和 TF 命令定位断链位置</td></tr></tbody></table>
+<h3>常见错误</h3>
+<ul><li><strong>忘记在每个终端 source ROS2</strong>：新终端不会自动继承另一个终端的环境。</li><li><strong>把 <code>requirements.txt</code> 当作 ROS2 消息包安装方式</strong>：<code>drdds</code> 等需要工作空间构建与 source。</li><li><strong>同时启动两个 stage4 转换节点</strong>：同一 <code>/JOINTS_CMD</code> 出现多发布者，步态交错。</li><li><strong>在 stage4 键盘输入后按回车等待</strong>：键盘使用单字符读取，不需要回车。</li><li><strong>非交互式终端启动键盘或 stage5</strong>：<code>isatty</code>、<code>termios</code> 或 <code>tty</code> 可能失败。</li><li><strong>只关闭键盘终端就以为停车</strong>：转换节点可能保留最后速度；应先按空格。</li><li><strong>期望 stage5 接收 <code>/cmd_vel</code></strong>：stage5 使用自己的内部键盘状态和 PD 步态。</li><li><strong>把真值 TF 当作 SLAM 估计轨迹</strong>：它直接来自 MuJoCo <code>qpos</code>。</li><li><strong>把 stage5 称为完整 SLAM</strong>：当前没有地图、定位、扫描匹配或回环模块。</li><li><strong>点云没有消息就认定雷达故障</strong>：可能只是所有射线都未获得 <code>0&lt;dist&lt;15 m</code> 的有效命中。</li><li><strong>忽略点云为 <code>world</code> 系</strong>：外部 SLAM 若使用其他传感器系，需要额外坐标适配。</li><li><strong>忽略缺少 <code>/clock</code> 与雷达安装变换</strong>：当前脚本没有提供这些集成条件，不能假设外部系统可直接工作。</li></ul>
+</section>
+<section class="view" id="view-ch5">
+<header class="chapter-head"><span class="chapter-num">05</span><h2>Lite3 实训考核与故障排查</h2></header>
+<h3>学习目标</h3>
+<p>完成本单元后，学生应能够：</p>
+<ol><li>按统一标准完成环境、物理、双引擎、强化学习和 ROS2/LiDAR 实验验收。</li><li>用最小测试和日志证据定位故障，避免无依据地修改模型、策略或源码。</li><li>识别资源路径、图形界面、观测顺序、执行器接口和话题通信中的高频问题。</li><li>对 stage3 的 45 维观测、默认角、PD 力矩和 0.5 秒超时作出准确解释。</li><li>对 stage5 的数据来源和算法边界作出明确说明。</li><li>形成包含运行条件、操作步骤、观察证据、结论和局限性的实训记录。</li></ol>
+<h3>建议学时</h3>
+<p>建议 <strong>2 学时</strong>：1 学时综合排查与考核说明，1 学时现场验收与答辩。课外完成实验记录整理。</p>
+<table><thead><tr><th style="text-align:left">活动</th><th style="text-align:right">学时</th></tr></thead><tbody><tr><td style="text-align:left">考核标准与预检演示</td><td style="text-align:right">0.5</td></tr><tr><td style="text-align:left">典型故障排查</td><td style="text-align:right">0.5</td></tr><tr><td style="text-align:left">现场验收与答辩</td><td style="text-align:right">1</td></tr></tbody></table>
+<h3>先修知识</h3>
+<ul><li>已完成 stage1～stage5 的基本操作。</li><li>能阅读 Python 报错栈并定位到具体文件和函数。</li><li>能使用 WSL 终端、多个 ROS2 终端和基础话题命令。</li><li>理解本课程所有关键数值与边界，而不仅是记住启动命令。</li></ul>
+<h3>核心概念</h3>
+<h4>证据优先的排查方法</h4>
+<p>推荐按以下顺序排查：</p>
+<pre><code class="language-text">确认脚本与运行目录
+→ 确认模型/策略资源
+→ 确认 Python/ROS2 环境
+→ 确认 GUI/TTY/焦点
+→ 确认状态与控制量
+→ 确认话题、频率与时间戳
+→ 最后才考虑修改参数或代码</code></pre>
+<p>每次只改变一个变量。先保存原始日志，再复位和重试。没有日志的“机器人不动”无法区分模型未加载、控制量为零、话题断开还是超时保护。</p>
+<h4>必须掌握的四个量化检查点</h4>
+<table><thead><tr><th style="text-align:left">检查点</th><th style="text-align:left">正确结果</th></tr></thead><tbody><tr><td style="text-align:left">水平机身重力投影</td><td style="text-align:left"><code>[0,0,-1]</code></td></tr><tr><td style="text-align:left">x 轴 <code>+90°</code> 重力投影</td><td style="text-align:left"><code>[0,-1,0]</code></td></tr><tr><td style="text-align:left">stage3 默认角</td><td style="text-align:left"><code>[0,-0.65,1.3]</code> 重复 4 次</td></tr><tr><td style="text-align:left">PD 样例及限幅</td><td style="text-align:left">未限幅 <code>[13,-26]</code>；<code>[-5,10]</code> 限幅后 <code>[10,-5]</code></td></tr></tbody></table>
+<p>此外，stage3 观测必须是 <code>float32</code> 的 <code>(45,)</code> 数组，ROS2 仿真在超过 0.5 秒没有有效关节命令时必须输出零力矩。</p>
+<h4>安全停止与故障保护不是同一件事</h4>
+<ul><li>键盘空格：主动发送零速度命令。</li><li>键盘 1 秒无输入：主动把键盘速度命令清零并继续发布。</li><li>仿真器 0.5 秒无有效 <code>/JOINTS_CMD</code>：被动输出零力矩。</li><li><code>r</code>：恢复部分仿真状态，但 stage3 的速度命令不会自动清零。</li></ul>
+<p>因此，正确习惯是“先停车，再复位；先结束发布者，再检查超时”。</p>
+<h4>成绩与证据的对应关系</h4>
+<table><thead><tr><th style="text-align:left">成绩项</th><th style="text-align:right">分值</th><th style="text-align:left">主要证据</th></tr></thead><tbody><tr><td style="text-align:left">环境与资源检查</td><td style="text-align:right">10</td><td style="text-align:left">版本、资源路径、预检输出</td></tr><tr><td style="text-align:left">物理与数学基础</td><td style="text-align:right">15</td><td style="text-align:left">重力投影、PD、状态布局、单变量实验</td></tr><tr><td style="text-align:left">PyBullet/MuJoCo 操作</td><td style="text-align:right">15</td><td style="text-align:left">键位、步态、对照记录</td></tr><tr><td style="text-align:left">stage3 强化学习部署</td><td style="text-align:right">25</td><td style="text-align:left">单元测试、观测表、动作—力矩链、超时验证</td></tr><tr><td style="text-align:left">ROS2 与 LiDAR 前端</td><td style="text-align:right">20</td><td style="text-align:left">话题图、节点频率、TF、stage5 边界</td></tr><tr><td style="text-align:left">实训记录与答辩</td><td style="text-align:right">15</td><td style="text-align:left">可复核记录、故障分析、结论与局限</td></tr><tr><td style="text-align:left">合计</td><td style="text-align:right">100</td><td style="text-align:left"></td></tr></tbody></table>
+<h3>教师演示</h3>
+<h4>演示 1：无 GUI 预检</h4>
+<pre><code class="language-bash">cd ~/lite3_lab/simulation
+source .venv/bin/activate
+python3 -m unittest discover -s tests -v</code></pre>
+<p>随后检查资源：</p>
+<pre><code class="language-bash">ls ../Lite3_rl_deploy/third_party/deep_robotics_model/Lite3/Lite3_urdf/urdf/Lite3.urdf
+ls ../Lite3_rl_deploy/third_party/deep_robotics_model/Lite3/Lite3_mjcf/mjcf/Lite3.xml
+ls ../Lite3_rl_deploy/policy/ppo/policy.onnx</code></pre>
+<p>本组测试不打开仿真窗口。如果测试通过而 GUI 启动失败，应优先排查图形显示，而不是重写观测或 PD 代码。</p>
+<h4>演示 2：ROS2 分层预检</h4>
+<p>每个 ROS2 终端先执行：</p>
+<pre><code class="language-bash">source /opt/ros/&lt;发行版&gt;/setup.bash
+source &lt;工作空间&gt;/install/setup.bash
+python3 -c &quot;import rclpy; import drdds.msg; print(&#x27;ROS2 and drdds OK&#x27;)&quot;</code></pre>
+<p>再启动仿真与一个控制器，检查：</p>
+<pre><code class="language-bash">ros2 topic list
+ros2 topic info /cmd_vel --verbose
+ros2 topic info /JOINTS_CMD --verbose
+ros2 topic hz /JOINTS_DATA</code></pre>
+<p>教师应现场展示“缺少 source”“没有订阅者”“两个发布者”三种故障的不同证据。</p>
+<h4>演示 3：关键故障定位</h4>
+<p>故意选择只读方式复现：</p>
+<ul><li>从错误目录运行脚本，展示导入/资源路径问题；</li><li>不启动发布者，展示 0.5 秒零力矩；</li><li>启动键盘但不启动步态节点，展示“没有 <code>/cmd_vel</code> 订阅者”；</li><li>只启动 stage5，说明它不会自动接收 stage4 键盘命令。</li></ul>
+<p>不修改课程源码，不伪造通过结果。</p>
+<h3>学生实操</h3>
+<h4>综合验收任务</h4>
+<ol><li><strong>环境与资源</strong>：记录 Python 及主要包版本，确认三个资源文件存在。</li><li><strong>基础测试</strong>：运行 6 项单元测试，解释重力投影、默认角、PD 和观测测试。</li><li><strong>双引擎</strong>：分别完成 stage1 站立/trot/推力/复位和 stage2 站立/蹲伏/环境切换/复位。</li><li><strong>本地策略</strong>：运行 stage3，演示 <code>x→r</code>、速度命令、转向、停止和侧向扰动。</li><li><strong>ROS2 链路</strong>：串行运行 stage3 仿真、一个 stage4 转换节点和键盘节点，检查话题反馈。</li><li><strong>超时保护</strong>：停止关节命令发布者，确认超过 0.5 秒后零力矩。</li><li><strong>LiDAR 前端</strong>：运行 stage5，检查点云、真值里程计、TF 和 Marker。</li><li><strong>边界答辩</strong>：明确说明 stage5 没有建图、定位、扫描匹配或回环。</li></ol>
+<h4>实训记录最小内容</h4>
+<p>每次实验至少记录：</p>
+<ul><li>脚本名和运行目录；</li><li>WSL/ROS2/虚拟环境状态；</li><li>初始姿态、摩擦、重力和命令；</li><li>实际操作与时间顺序；</li><li>关键日志或话题输出；</li><li>观察结果及证据；</li><li>复位/停止操作；</li><li>结论、可能原因和未验证因素。</li></ul>
+<h4>现场抽查询问</h4>
+<p>教师随机抽取以下问题，学生需口头回答并指向代码或测试证据：</p>
+<ol><li>45 维观测每一段是什么？</li><li>为什么使用 <code>R^T</code>？</li><li>默认角为何是 <code>(0,-0.65,1.3)</code>？</li><li>为什么 <code>data.ctrl</code> 不能接收目标角？</li><li>无效 ROS2 指令会不会刷新超时时间？</li><li>stage4 两个转换节点为何不能同时运行？</li><li>stage5 的里程计是真值还是 SLAM 估计？</li></ol>
+<h3>思考题</h3>
+<ol><li>单元测试全部通过，是否足以证明 GUI、ONNX 模型和 ROS2 环境都正常？为什么？</li><li>如果观测长度是 45 但顺序错误，测试或日志会怎样提示？部署前应如何避免？</li><li>如果机器人摔倒后按 <code>r</code> 仍继续前进，可能漏掉了哪一步？</li><li>如果 ROS2 仿真收到非法消息后仍使用旧力矩，是否说明校验失效？</li><li>为什么“有发布者”不代表“有订阅者”，也不代表“消息频率足够”？</li><li>如果外部 SLAM 无法直接消费 stage5 的点云，可以从哪些坐标系/时间信息入手检查？</li><li>真值轨迹完全平滑是否能够证明外部 SLAM 实现正确？</li><li>为什么排障时应先复位和保存日志，而不是连续叠加推力、重力和低摩擦？</li></ol>
+<h3>验收标准</h3>
+<h4>合格线与一票否决项</h4>
+<p>总评达到 <strong>60 分</strong> 为合格，并须同时满足以下条件：</p>
+<ul><li>能正确说明 45 维观测顺序；</li><li>能正确说明 <code>R^T*(0,0,-1)</code>；</li><li>能正确说明 stage3 默认角和 PD 力矩接口；</li><li>能正确说明 ROS2 指令校验及 0.5 秒超时；</li><li>明确 stage5 不建图、不定位、不回环，发布的是真值。</li></ul>
+<p>将 stage5 描述为“已实现完整 SLAM”、把目标角直接当作电机力矩、或无法解释观测顺序，均不能通过相应核心项，即使总程序能够运行。</p>
+<h4>分项评分细则</h4>
+<table><thead><tr><th style="text-align:left">分项</th><th style="text-align:left">优秀表现</th><th style="text-align:left">合格表现</th></tr></thead><tbody><tr><td style="text-align:left">环境与资源 10</td><td style="text-align:left">独立定位问题并给出版本/路径证据</td><td style="text-align:left">能按文档完成安装和资源核对</td></tr><tr><td style="text-align:left">物理基础 15</td><td style="text-align:left">手算正确且能解释物理含义</td><td style="text-align:left">重力投影、PD 和状态布局基本正确</td></tr><tr><td style="text-align:left">双引擎 15</td><td style="text-align:left">控制变量清晰，比较有证据</td><td style="text-align:left">能操作全部键位并记录主要现象</td></tr><tr><td style="text-align:left">RL 部署 25</td><td style="text-align:left">观测、动作、力矩、超时均能贯通解释</td><td style="text-align:left">测试通过且核心概念无混淆</td></tr><tr><td style="text-align:left">ROS2/LiDAR 20</td><td style="text-align:left">能独立排查话题链并准确说明数据边界</td><td style="text-align:left">能启动链路并识别 stage5 输出</td></tr><tr><td style="text-align:left">记录与答辩 15</td><td style="text-align:left">证据完整、结论有边界、故障分析可复核</td><td style="text-align:left">记录包含必要步骤和结果</td></tr></tbody></table>
+<h4>量化验收清单</h4>
+<table><thead><tr><th style="text-align:left">编号</th><th style="text-align:left">验收内容</th><th style="text-align:left">通过标准</th></tr></thead><tbody><tr><td style="text-align:left">A1</td><td style="text-align:left">单元测试</td><td style="text-align:left">6 项全部通过</td></tr><tr><td style="text-align:left">A2</td><td style="text-align:left">重力投影</td><td style="text-align:left">水平 <code>[0,0,-1]</code>；x 轴 <code>+90°</code> <code>[0,-1,0]</code></td></tr><tr><td style="text-align:left">A3</td><td style="text-align:left">观测</td><td style="text-align:left">45 维、<code>float32</code>、六段顺序与缩放正确</td></tr><tr><td style="text-align:left">A4</td><td style="text-align:left">默认角</td><td style="text-align:left"><code>[0,-0.65,1.3]</code> 重复 4 次</td></tr><tr><td style="text-align:left">A5</td><td style="text-align:left">PD</td><td style="text-align:left"><code>[13,-26]</code>；限幅后 <code>[10,-5]</code></td></tr><tr><td style="text-align:left">A6</td><td style="text-align:left">力矩接口</td><td style="text-align:left">明确目标角须先经 PD 再写 <code>data.ctrl</code></td></tr><tr><td style="text-align:left">A7</td><td style="text-align:left">ROS2 校验</td><td style="text-align:left">12 关节、可解析、全有限值；非法消息不刷新时间戳</td></tr><tr><td style="text-align:left">A8</td><td style="text-align:left">ROS2 超时</td><td style="text-align:left">超过 0.5 秒无有效命令时零力矩</td></tr><tr><td style="text-align:left">A9</td><td style="text-align:left">stage4</td><td style="text-align:left">同一时间只有一个关节命令发布者</td></tr><tr><td style="text-align:left">A10</td><td style="text-align:left">stage5</td><td style="text-align:left">正确识别四类输出及真值来源</td></tr><tr><td style="text-align:left">A11</td><td style="text-align:left">SLAM 边界</td><td style="text-align:left">明确没有地图、定位、扫描匹配和回环</td></tr></tbody></table>
+<h3>常见错误与故障排查</h3>
+<h4>启动与资源问题</h4>
+<table><thead><tr><th style="text-align:left">现象</th><th style="text-align:left">可能原因</th><th style="text-align:left">排查与处理</th></tr></thead><tbody><tr><td style="text-align:left"><code>README</code> 命令可读但模型文件不存在</td><td style="text-align:left">只复制了 <code>simulation</code></td><td style="text-align:left">恢复同级 <code>Lite3_rl_deploy</code> 目录结构</td></tr><tr><td style="text-align:left"><code>ModuleNotFoundError: project_paths</code></td><td style="text-align:left">未从脚本目录运行，或工作目录错误</td><td style="text-align:left">回到 <code>~/lite3_lab/simulation</code> 再启动</td></tr><tr><td style="text-align:left">ONNX 文件不存在</td><td style="text-align:left">策略资源未随项目迁移</td><td style="text-align:left">检查 <code>project_paths.py</code> 指向的 <code>policy/ppo/policy.onnx</code></td></tr><tr><td style="text-align:left">PyBullet/MuJoCo 导入失败</td><td style="text-align:left">未激活虚拟环境或包未安装</td><td style="text-align:left"><code>source .venv/bin/activate</code>，检查 <code>pip install -r requirements.txt</code></td></tr><tr><td style="text-align:left"><code>rclpy</code>/<code>drdds</code> 导入失败</td><td style="text-align:left">未 source ROS2 或消息工作空间</td><td style="text-align:left">每个终端重新 source 两个 setup</td></tr><tr><td style="text-align:left">GUI 无法打开</td><td style="text-align:left">WSLg、<code>DISPLAY</code> 或显卡显示异常</td><td style="text-align:left">先在 WSL 内检查图形环境；不要先改控制代码</td></tr><tr><td style="text-align:left">键盘脚本报 TTY 错误</td><td style="text-align:left">通过非交互式管道或后台方式启动</td><td style="text-align:left">使用交互式 WSL 终端，不要用 <code>nohup</code> 代替键盘输入</td></tr></tbody></table>
+<h4>stage1/stage2 操作问题</h4>
+<table><thead><tr><th style="text-align:left">现象</th><th style="text-align:left">可能原因</th><th style="text-align:left">排查与处理</th></tr></thead><tbody><tr><td style="text-align:left">stage1 方向键无效</td><td style="text-align:left">PyBullet 窗口没有焦点</td><td style="text-align:left">点击查看器窗口后再按方向键</td></tr><tr><td style="text-align:left">stage1 数字键无效</td><td style="text-align:left">实际运行的是 stage2</td><td style="text-align:left">核对脚本和键位表</td></tr><tr><td style="text-align:left">stage2 输入无反应</td><td style="text-align:left">终端输入未回车，或输入焦点不在查看器</td><td style="text-align:left">终端字母后回车；查看器字母直接按键</td></tr><tr><td style="text-align:left">stage2 多个命令“只执行一个”</td><td style="text-align:left">短时间堆积多个队列项</td><td style="text-align:left">主循环每步取一个，逐条输入并观察</td></tr><tr><td style="text-align:left">接触对数为 0 但模型已加载</td><td style="text-align:left">机器人离地、零重力或已翻倒</td><td style="text-align:left">结合高度、姿态和模式判断，先复位</td></tr><tr><td style="text-align:left">零重力后仍继续运动</td><td style="text-align:left">零重力不清除已有速度</td><td style="text-align:left">按 <code>r</code> 或等待耗散，不要误判为重力未生效</td></tr><tr><td style="text-align:left">复位后仍前进/受力</td><td style="text-align:left">忽略模式、摩擦、推力或速度命令状态</td><td style="text-align:left">阅读对应脚本的复位范围；stage3 先 <code>x</code> 再 <code>r</code></td></tr></tbody></table>
+<h4>stage3 策略与力矩问题</h4>
+<table><thead><tr><th style="text-align:left">现象</th><th style="text-align:left">可能原因</th><th style="text-align:left">排查与处理</th></tr></thead><tbody><tr><td style="text-align:left">策略输入维度报错</td><td style="text-align:left">ONNX 输入不是 45 维</td><td style="text-align:left">核对模型与脚本是否配套，不随意改 <code>OBS_DIM</code></td></tr><tr><td style="text-align:left">行为异常但无异常日志</td><td style="text-align:left">观测顺序、缩放或默认角错误</td><td style="text-align:left">对照 45 维表和 6 项单元测试</td></tr><tr><td style="text-align:left">重力方向看起来相反</td><td style="text-align:left">使用了 <code>R</code> 而非 <code>R^T</code>，或四元数顺序错误</td><td style="text-align:left">验证水平与 x 轴 <code>+90°</code> 两个测试</td></tr><tr><td style="text-align:left">机器人像被“角度数值”驱动</td><td style="text-align:left">把目标角直接写入 <code>data.ctrl</code></td><td style="text-align:left">恢复 PD 力矩计算与限幅</td></tr><tr><td style="text-align:left">站立高度不稳定</td><td style="text-align:left">使用其他阶段默认角或增益</td><td style="text-align:left">stage3 使用 <code>(0,-0.65,1.3)</code>、<code>kp=30</code>、<code>kd=1</code></td></tr><tr><td style="text-align:left">按 <code>r</code> 后仍前进</td><td style="text-align:left"><code>r</code> 不清速度命令</td><td style="text-align:left">先 <code>x</code> 再 <code>r</code></td></tr><tr><td style="text-align:left">动作看似没有效果</td><td style="text-align:left">关注了原始动作而非目标角/力矩</td><td style="text-align:left">检查 <code>default+0.25*action</code> 和 <code>data.ctrl</code></td></tr><tr><td style="text-align:left">离线测试通过但 GUI 失败</td><td style="text-align:left">MuJoCo/ONNX 运行环境或模型问题</td><td style="text-align:left">分开验证 Python 包、资源、GUI 和 ONNX</td></tr></tbody></table>
+<h4>ROS2 通信问题</h4>
+<table><thead><tr><th style="text-align:left">现象</th><th style="text-align:left">可能原因</th><th style="text-align:left">排查与处理</th></tr></thead><tbody><tr><td style="text-align:left"><code>ros2</code> 命令找不到</td><td style="text-align:left">ROS2 未安装或未 source</td><td style="text-align:left">检查安装和当前终端 setup</td></tr><tr><td style="text-align:left">话题列表为空/缺少预期话题</td><td style="text-align:left">节点未启动、域名不同或提前退出</td><td style="text-align:left">检查进程日志、<code>ROS_DOMAIN_ID</code> 和节点状态</td></tr><tr><td style="text-align:left">键盘提示无 <code>/cmd_vel</code> 订阅者</td><td style="text-align:left">步态转换节点未启动</td><td style="text-align:left">启动 <code>walk_sim</code> 或 <code>controller</code> 之一</td></tr><tr><td style="text-align:left">机器人收到两套交错步态</td><td style="text-align:left">两个 stage4 转换节点同时运行</td><td style="text-align:left">只保留一个 <code>/JOINTS_CMD</code> 发布者</td></tr><tr><td style="text-align:left">停止键盘后仍运动</td><td style="text-align:left">转换节点保留最后 <code>/cmd_vel</code></td><td style="text-align:left">先按空格，再结束节点</td></tr><tr><td style="text-align:left">仿真收到命令仍拒绝</td><td style="text-align:left">关节数不为 12、无法解析或含 NaN/Inf</td><td style="text-align:left">查看警告，修正消息；非法消息不会保活</td></tr><tr><td style="text-align:left">关节状态不更新</td><td style="text-align:left">仿真未运行或进程异常</td><td style="text-align:left">检查 MuJoCo 日志和 <code>/JOINTS_DATA</code> 频率</td></tr><tr><td style="text-align:left">发布者停止后机器人下沉</td><td style="text-align:left">0.5 秒超时主动输出零力矩</td><td style="text-align:left">这是设计行为，不是通信“卡死”；先复位</td></tr><tr><td style="text-align:left">命令看似安全但力矩过大</td><td style="text-align:left">有限值校验不等于幅值限幅</td><td style="text-align:left">教师监督下使用合理增益/力矩；当前 ROS2 路径无自动限幅</td></tr></tbody></table>
+<h4>stage5 与数据前端问题</h4>
+<table><thead><tr><th style="text-align:left">现象</th><th style="text-align:left">可能原因</th><th style="text-align:left">排查与处理</th></tr></thead><tbody><tr><td style="text-align:left">stage5 不响应 stage4 键盘</td><td style="text-align:left">两者没有控制连接</td><td style="text-align:left">stage5 使用自身窗口和内部键盘状态</td></tr><tr><td style="text-align:left"><code>/lidar_points</code> 没有消息</td><td style="text-align:left">没有有效命中、节点未发布或未运行</td><td style="text-align:left">检查进程、世界系点云和 <code>0&lt;dist&lt;15 m</code> 条件</td></tr><tr><td style="text-align:left">点云数量不是 144</td><td style="text-align:left">144 是射线方向上限，不是保证点数</td><td style="text-align:left">只有有效命中才生成点</td></tr><tr><td style="text-align:left">真值轨迹不变</td><td style="text-align:left">机器人没有移动或仿真未推进</td><td style="text-align:left">在 stage5 查看器按 <code>w/s/a/d</code>，检查内部 <code>vx/wz</code></td></tr><tr><td style="text-align:left">TF 找不到</td><td style="text-align:left">未 source TF 包、节点未发布或帧名错误</td><td style="text-align:left">检查 <code>world</code> 和 <code>base_link</code>，使用 <code>tf2_echo</code></td></tr><tr><td style="text-align:left">外部 SLAM 无法直接使用点云</td><td style="text-align:left">世界系、时间戳、传感器外参或 <code>/clock</code> 不匹配</td><td style="text-align:left">先确认输入约定；当前脚本不提供完整 SLAM 集成</td></tr><tr><td style="text-align:left">期待地图却看不到</td><td style="text-align:left">课程脚本没有建图模块</td><td style="text-align:left">正确结论是“stage5 只是数据前端”</td></tr><tr><td style="text-align:left">把 <code>/ground_truth_odom</code> 当作估计</td><td style="text-align:left">混淆真值与 SLAM 输出</td><td style="text-align:left">检查代码来源：直接读取 MuJoCo <code>qpos</code></td></tr></tbody></table>
+<h4>需要升级给教师的情况</h4>
+<p>出现以下情况应停止实验并报告教师，而不是继续加大推力或增益：</p>
+<ul><li>模型能加载但持续穿透地面或出现极端数值；</li><li>ONNX 输入维度与 45 不符；</li><li>ROS2 消息中的 NaN/Inf 无法定位来源；</li><li>有效命令在超时后仍出现异常大力矩；</li><li>多发布者导致控制交错且无法确认唯一发布者；</li><li>WSL 图形环境或 ROS2 工作空间被破坏，需要系统级修复。</li></ul>
+<h3>常见错误</h3>
+<ul><li><strong>只背命令，不检查运行目录和环境</strong>：同一句命令在不同终端可能得到不同结果。</li><li><strong>把测试通过等同于所有实验通过</strong>：单元测试不覆盖 GUI、完整 ONNX 推理和 ROS2 通信。</li><li><strong>同时改变摩擦、重力和姿态</strong>：无法归因，实验结果不可复核。</li><li><strong>将设定速度当作真实测量速度</strong>：日志字段必须结合代码来源解释。</li><li><strong>用真值里程计冒充 SLAM 估计</strong>：违反课程边界，也不能用于证明算法效果。</li><li><strong>忽略非法消息不刷新时间戳</strong>：会误判 0.5 秒超时行为。</li><li><strong>将零力矩理解为安全站姿</strong>：它只是停止主动施力，重力仍可能使机器人倒下。</li><li><strong>在没有保存日志前反复重启</strong>：丢失故障现场，导致无法比较。</li><li><strong>直接修改课程源码来“修环境”</strong>：应优先恢复依赖、资源、工作空间和 source 顺序。</li><li><strong>验收记录只写截图不写条件</strong>：至少应记录脚本、初始状态、改变量和复位步骤。</li></ul>
+</section>
+</main>
+<script>
+const COURSE_NAME = document.documentElement.dataset.course || document.title;
+const main = document.querySelector('main');
+const views = [...document.querySelectorAll('.view')];
+const ids = views.map(v => v.id.replace(/^view-/, ''));
+const links = [...document.querySelectorAll('aside nav a')];
+const chapterNames = Object.fromEntries(
+  links.map(a => [a.getAttribute('href').slice(1), a.textContent.trim()])
+);
+const mobileSelect = document.querySelector('.mobile-nav select');
+const bar = document.querySelector('.course-bar');
+
+function firstId(){ return ids[0] || 'intro'; }
+function setText(sel, text){ const el = bar && bar.querySelector(sel); if (el) el.textContent = text; }
+
+function showView(id, updateHash){
+  if (!ids.includes(id)) id = firstId();
+  const idx = ids.indexOf(id);
+  views.forEach(v => v.classList.toggle('active', v.id === 'view-' + id));
+  links.forEach(a => a.classList.toggle('active', a.getAttribute('href') === '#' + id));
+  setText('.course-name', COURSE_NAME);
+  setText('.chapter-name', chapterNames[id] || '');
+  setText('.chapter-progress', (idx + 1) + ' / ' + ids.length);
+  const progress = document.getElementById('progress');
+  if (progress) progress.style.width = ((idx + 1) / ids.length * 100) + '%';
+  if (mobileSelect) mobileSelect.value = id;
+  main.scrollTop = 0;
+  if (updateHash) history.pushState(null, '', '#' + id);
+}
+
+links.forEach(a => a.addEventListener('click', e => {
+  e.preventDefault();
+  showView(a.getAttribute('href').slice(1), true);
+}));
+if (mobileSelect) mobileSelect.addEventListener('change', e => showView(e.target.value, true));
+window.addEventListener('popstate', () =>
+  showView(location.hash.slice(1) || firstId(), false));
+showView(location.hash.slice(1) || firstId(), false);
+</script>
+</body>
+</html>

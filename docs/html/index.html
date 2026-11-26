@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-course="教师与课程管理">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>教师与课程管理</title>
+<style>
+:root{
+  --ink:#1c2733; --ink-soft:#4d5a68; --ink-faint:#8a939d;
+  --paper:#f7f9fb; --accent:#2d6fc2; --accent-soft:#e6effb; --accent-deep:#1f4f8f;
+  --line:#e6e0d7; --sidebar:#141c26; --sidebar-ink:#a8b6c4;
+  --code-bg:#1e2430; --code-ink:#d8e2ee;
+  --layer-1:#8f4419; --layer-2:#a24e20; --layer-3:#b3572a;
+  --layer-4:#c2622d; --layer-5:#cf7a45; --stroke-light:#ffffff;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;height:100%}
+body{background:var(--paper);color:var(--ink);font:16.5px/1.85 -apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;overflow:hidden}
+a{color:var(--accent-deep)}
+#progress-wrap{position:fixed;top:0;left:0;right:0;height:3px;background:var(--line);z-index:60}
+#progress{height:100%;width:0;background:var(--accent);transition:width .25s ease}
+aside{position:fixed;top:0;left:0;bottom:0;width:270px;background:var(--sidebar);color:var(--sidebar-ink);display:flex;flex-direction:column;z-index:40}
+.brand{padding:30px 24px 20px;border-bottom:1px solid rgba(255,255,255,.09)}
+.brand h1{margin:0 0 6px;font:700 19px/1.5 "Songti SC","Noto Serif SC",serif;color:#fff}
+.brand p{margin:0;font-size:12.5px;opacity:.72}
+.brand .meta{margin-top:12px;font-size:12px;opacity:.55}
+aside nav{flex:1;overflow-y:auto;padding:14px 12px 30px}
+aside nav a{display:block;padding:9px 12px;margin:2px 0;border-radius:6px;color:var(--sidebar-ink);text-decoration:none;font-size:14px;line-height:1.5;border-left:3px solid transparent}
+aside nav a:hover{background:rgba(255,255,255,.06);color:#fff}
+aside nav a.active{background:rgba(255,255,255,.10);color:#fff;border-left-color:var(--accent)}
+.course-bar{position:fixed;top:3px;left:270px;right:0;height:52px;display:flex;align-items:center;gap:10px;padding:0 34px;background:var(--paper);border-bottom:1px solid var(--line);z-index:30;font-size:13.5px}
+.course-bar .course-name{font-weight:700;color:var(--ink)}
+.course-bar .sep,.course-bar .chapter-name{color:var(--ink-soft)}
+.course-bar .chapter-progress{margin-left:auto;color:var(--ink-faint);font-variant-numeric:tabular-nums}
+main{position:fixed;top:55px;left:270px;right:0;bottom:0;overflow-y:auto;padding:38px 34px 90px}
+.view{display:none;max-width:900px;margin:0 auto}
+.view.active{display:block}
+.chapter-head{margin:0 0 34px;padding-bottom:18px;border-bottom:2px solid var(--line)}
+.chapter-num{display:inline-block;margin-right:12px;color:var(--accent);font:700 14px/1 Helvetica,Arial,sans-serif;letter-spacing:.08em;vertical-align:middle}
+.chapter-head h2{display:inline;margin:0;font:700 clamp(22px,2.9vw,29px)/1.4 "Songti SC","Noto Serif SC",serif;vertical-align:middle}
+.chapter-head .era{display:block;margin-top:10px;color:var(--ink-faint);font:13px/1.5 Helvetica,Arial,sans-serif;letter-spacing:.04em}
+.view h3{font:700 18.5px/1.5 "Songti SC","Noto Serif SC",serif;margin:34px 0 14px;padding-left:12px;border-left:3px solid var(--accent)}
+.view h4,.view h5,.view h6{font:700 16.5px/1.5 "Songti SC","Noto Serif SC",serif;margin:26px 0 12px;color:var(--ink)}
+.view p{margin:0 0 18px}
+.view ul,.view ol{margin:0 0 18px;padding-left:26px}
+.view li{margin:0 0 7px}
+.view blockquote{margin:0 0 18px;padding:10px 18px;border-left:3px solid var(--accent-soft);background:var(--accent-soft);color:var(--ink-soft)}
+.view blockquote p{margin:0}
+.view hr{border:0;border-top:1px solid var(--line);margin:30px 0}
+.view code{font:13.5px/1.6 "SFMono-Regular",Consolas,monospace;background:var(--accent-soft);color:var(--accent-deep);padding:2px 5px;border-radius:3px}
+.view pre{background:var(--code-bg);color:var(--code-ink);padding:18px 20px;border-radius:6px;overflow-x:auto;margin:0 0 20px}
+.view pre code{background:none;color:inherit;padding:0;font-size:13.5px}
+.view table{width:100%;border-collapse:collapse;margin:0 0 22px;font-size:15px}
+.view th,.view td{border:1px solid var(--line);padding:9px 12px;text-align:left;vertical-align:top}
+.view th{background:var(--accent-soft);font-weight:700}
+.view img{max-width:100%;height:auto}
+figure.diagram{margin:28px 0;padding:0;break-inside:avoid}
+figure.diagram svg{width:100%;height:auto;min-width:540px;display:block}
+.diagram-scroll{overflow-x:auto}
+figure.diagram figcaption{margin-top:10px;color:var(--ink-faint);font-size:13.5px;text-align:center;line-height:1.6}
+.mobile-nav{display:none}
+@media (max-width:900px){
+  aside{display:none}
+  body{overflow:hidden}
+  .course-bar{display:none}
+  .mobile-nav{display:flex;position:fixed;top:3px;left:0;right:0;height:56px;align-items:center;gap:12px;padding:0 16px;background:var(--paper);border-bottom:1px solid var(--line);z-index:30}
+  .mobile-nav .m-title{font-weight:700;font-size:14px;white-space:nowrap;max-width:45%;overflow:hidden;text-overflow:ellipsis}
+  .mobile-nav select{flex:1;min-width:0;padding:7px 9px;border:1px solid var(--line);border-radius:6px;background:var(--paper);color:var(--ink);font-size:14px}
+  main{top:59px;left:0;right:0;padding:24px 18px 70px}
+  figure.diagram svg{min-width:540px}
+}
+@media print{
+  #progress-wrap,aside,.course-bar,.mobile-nav{display:none!important}
+  html,body{height:auto;overflow:visible;background:#fff}
+  main{position:static;height:auto;overflow:visible;padding:0}
+  .view,.view.active{display:block!important;max-width:none;margin:0}
+  .view{break-after:page;page-break-after:always}
+  .view:last-child{break-after:auto;page-break-after:auto}
+  figure.diagram,pre,table,blockquote{break-inside:avoid;page-break-inside:avoid}
+  figure.diagram svg{min-width:0;max-width:100%}
+  a{color:inherit;text-decoration:none}
+}
+</style>
+</head>
+<body>
+<div id="progress-wrap"><div id="progress"></div></div>
+<aside>
+  <div class="brand"><h1>教师与课程管理</h1><p>大学实训课程组织与评价</p><div class="meta">共 4 章 · 单章切换</div></div>
+  <nav><a href="#intro">00 课程地图</a><a href="#ch1">01 教师授课指南</a><a href="#ch2">02 考核评价量规</a><a href="#ch3">03 实验室管理与复盘</a></nav>
+</aside>
+<div class="course-bar">
+  <span class="course-name">教师与课程管理</span><span class="sep">·</span>
+  <span class="chapter-name"></span><span class="chapter-progress"></span>
+</div>
+<div class="mobile-nav">
+  <span class="m-title">教师与课程管理</span>
+  <select aria-label="选择章节"><option value="intro">00 课程地图</option><option value="ch1">01 教师授课指南</option><option value="ch2">02 考核评价量规</option><option value="ch3">03 实验室管理与复盘</option></select>
+</div>
+<main>
+<section class="view" id="view-intro">
+<header class="chapter-head"><span class="chapter-num">00</span><h2>课程地图</h2></header>
+<h3>课程定位</h3>
+<p>本课程面向机器人工程、自动化、计算机等专业本科实训，围绕四足机器人的通信、状态机、运动控制、视觉跟踪、物理仿真、强化学习部署和 ROS2 接口展开。课程强调可复现实验、安全边界和工程证据，不以“演示成功一次”作为唯一目标。</p>
+<h3>培养目标</h3>
+<p>完成课程后，学生能够：</p>
+<ol><li>描述四足机器人感知—决策—执行—反馈闭环。</li><li>使用 UDP 协议读取状态并发送安全运动命令。</li><li>根据姿态、步态和速度状态设计顺序控制流程。</li><li>理解死区、帧龄、超时、看门狗和急停等实时安全概念。</li><li>使用 PyBullet/MuJoCo 建立可重复实验。</li><li>解释 RL 观测、动作缩放和 PD 力矩伺服。</li><li>使用 ROS2 话题传递关节指令并识别数据前端与算法边界。</li><li>记录实验、分析故障并提交可评价的证据。</li></ol>
+<h3>模块关系</h3>
+<div class="diagram-scroll"><figure class="diagram"><svg viewBox="0 0 880 500" role="img" aria-labelledby="f4t"><title id="f4t">公共基础连接真机与仿真课程</title><rect x="250" y="35" width="380" height="92" rx="16" style="fill:var(--layer-1)"/><text x="440" y="92" text-anchor="middle" style="fill:var(--stroke-light);font-size:27">公共基础</text><rect x="55" y="275" width="340" height="150" rx="16" style="fill:var(--accent-soft);stroke:var(--accent)"/><text x="225" y="325" text-anchor="middle" style="fill:var(--ink);font-size:27">真机 task</text><text x="225" y="370" text-anchor="middle" style="fill:var(--ink-soft);font-size:20">协议 · 状态机 · 安全 · GUI</text><rect x="485" y="275" width="340" height="150" rx="16" style="fill:var(--accent-soft);stroke:var(--accent)"/><text x="655" y="325" text-anchor="middle" style="fill:var(--ink);font-size:27">仿真 stage</text><text x="655" y="370" text-anchor="middle" style="fill:var(--ink-soft);font-size:20">物理 · RL · ROS2 · 数据前端</text><path d="M365 130 L225 265 M515 130 L655 265" style="fill:none;stroke:var(--accent);stroke-width:4" marker-end="url(#a4)"/><defs><marker id="a4" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" style="fill:var(--accent)"/></marker></defs></svg><figcaption>共同基础让两类实验使用同一套坐标、安全和证据标准，联合课程才能比较模型与真实差异。</figcaption></figure></div>
+<pre><code class="language-text">公共基础
+  ├── 真机 task：协议 → 状态机 → 轴控制 → GUI → 视觉跟随
+  └── 仿真 stage：物理引擎 → RL 部署 → ROS2 → LiDAR 数据前端</code></pre>
+<p>联合课程中，公共基础提供统一坐标系、单位、安全和记录规范；真机与仿真分别验证硬件约束和算法正确性。</p>
+<h3>学时方案</h3>
+<h4>方案 A：真机为主，48 学时</h4>
+<table><thead><tr><th style="text-align:left">模块</th><th style="text-align:right">学时</th></tr></thead><tbody><tr><td style="text-align:left">公共基础</td><td style="text-align:right">10</td></tr><tr><td style="text-align:left">task01~task03 通信与状态机</td><td style="text-align:right">8</td></tr><tr><td style="text-align:left">task05~task09 运动与防撞</td><td style="text-align:right">14</td></tr><tr><td style="text-align:left">task10/task12 GUI 与视觉跟踪</td><td style="text-align:right">12</td></tr><tr><td style="text-align:left">综合项目与考核</td><td style="text-align:right">4</td></tr></tbody></table>
+<h4>方案 B：仿真为主，48 学时</h4>
+<table><thead><tr><th style="text-align:left">模块</th><th style="text-align:right">学时</th></tr></thead><tbody><tr><td style="text-align:left">公共基础</td><td style="text-align:right">10</td></tr><tr><td style="text-align:left">stage1~stage2 物理仿真</td><td style="text-align:right">12</td></tr><tr><td style="text-align:left">stage3 RL 部署</td><td style="text-align:right">12</td></tr><tr><td style="text-align:left">stage3/4 ROS2 接口</td><td style="text-align:right">8</td></tr><tr><td style="text-align:left">stage5 数据前端与综合项目</td><td style="text-align:right">4</td></tr><tr><td style="text-align:left">考核</td><td style="text-align:right">2</td></tr></tbody></table>
+<h4>方案 C：联合课程，64 学时</h4>
+<p>公共基础 10、真机 22、仿真 22、综合对比 6、考核 4。综合项目要求同一速度指令分别在仿真和真机执行，比较速度、姿态、延迟和失败条件。</p>
+<h3>先修与分组</h3>
+<p>建议先修 Python、线性代数和计算机网络基础。每组 3~4 人，角色轮换：安全员、操作员、记录员、分析员。真机操作员和安全员不能由同一人长期担任。</p>
+<h3>教学资源</h3>
+<ul><li><code>shared/</code>：公共基础课程。</li><li><code>real_robot/</code>：真机代码、资源和回归测试。</li><li><code>simulation/</code>：仿真代码、模型定位和测试。</li><li><code>docs/</code>：本课程地图、教师指南和量规。</li><li>HTML 课程页：支持离线阅读、章节直达和打印全展开。</li></ul>
+<h3>验收原则</h3>
+<p>过程评价与结果评价并重。出现安全违规时，实操项目按安全门槛直接判定不合格；技术故障则根据记录、诊断和恢复过程给分。</p>
+</section>
+<section class="view" id="view-ch1">
+<header class="chapter-head"><span class="chapter-num">01</span><h2>教师授课指南</h2></header>
+<h3>课前准备</h3>
+<ol><li>冻结课程版本，记录 Git 提交和依赖版本。</li><li>真机课程检查电量、网络、悬挂装置、急停命令和状态监听。</li><li>仿真课程检查模型、ONNX 策略、显示环境和 ROS2 工作空间。</li><li>预跑所有演示命令，保存预期输出和异常样例。</li><li>按安全考核结果分组，明确安全员拥有一票否决权。</li></ol>
+<h3>课堂组织</h3>
+<p>每次 2 学时建议采用以下节奏：</p>
+<table><thead><tr><th style="text-align:left">环节</th><th style="text-align:right">时间</th><th style="text-align:left">教师任务</th></tr></thead><tbody><tr><td style="text-align:left">目标与安全</td><td style="text-align:right">10 min</td><td style="text-align:left">明确验收条件和高风险操作</td></tr><tr><td style="text-align:left">概念讲解</td><td style="text-align:right">25 min</td><td style="text-align:left">结合代码说明核心机制</td></tr><tr><td style="text-align:left">教师演示</td><td style="text-align:right">20 min</td><td style="text-align:left">展示正常路径和一个失败路径</td></tr><tr><td style="text-align:left">学生实操</td><td style="text-align:right">45 min</td><td style="text-align:left">巡视、记录共性错误</td></tr><tr><td style="text-align:left">复盘与提交</td><td style="text-align:right">10 min</td><td style="text-align:left">收日志、提问、布置报告</td></tr></tbody></table>
+<h3>演示策略</h3>
+<h4>先只读，再运动</h4>
+<p>真机从 task01/task02 开始，先确认链路和状态，再允许发送起立或运动命令。不要用 GUI 按钮代替协议基础教学。</p>
+<h4>正常路径与失败路径成对演示</h4>
+<ul><li>task07：正常前进与未停稳。</li><li>task12：新鲜帧与过期帧。</li><li>stage3：正确重力投影与符号错误。</li><li>stage5：明确真值里程计不是 SLAM 估计。</li></ul>
+<h4>让学生预测结果</h4>
+<p>在修改参数前先写预测，例如“减小 cooldown 会导致停车时间不足”。预测错误本身是诊断材料，不应简单扣分。</p>
+<h3>分层任务</h3>
+<ul><li><strong>基础层</strong>：按步骤运行脚本，完成状态和日志记录。</li><li><strong>进阶层</strong>：修改一个参数，设计对照实验并解释结果。</li><li><strong>挑战层</strong>：构造异常输入，验证拒绝逻辑或安全降级。</li></ul>
+<h3>真机课堂特殊要求</h3>
+<ul><li>同一时刻只允许一个控制端。</li><li>起立、转向、首次跟踪必须使用防跌倒措施。</li><li>任何安全员喊停，操作员立即执行停车/急停。</li><li>不让学生在未确认四膝和速度时进入下一阶段。</li><li>归零必须由教师确认姿态后操作。</li></ul>
+<h3>仿真课堂特殊要求</h3>
+<ul><li>先运行 NumPy 单元测试，再打开图形仿真器。</li><li>RL 实验先检查 45 维观测和 PD 力矩，再讨论步态效果。</li><li>ROS2 实验先验证消息数量和有限值，再连接控制器。</li><li>stage5 必须区分 <code>/ground_truth_odom</code> 与 SLAM 估计输出。</li></ul>
+<h3>常见课堂误区</h3>
+<ol><li>把状态码当作全部验收条件。</li><li>把读取数据的时间当作数据产生时间。</li><li>把目标关节角直接作为电机力矩。</li><li>把 dummy Homography 用于真机。</li><li>把仿真真值里程计称为 SLAM。</li><li>同时修改多个参数，导致无法归因。</li></ol>
+<h3>课后复盘</h3>
+<p>每组提交一页实验记录：目标、命令、关键观测、异常、根因假设、验证证据、收尾状态。教师按周汇总共性问题，更新下一轮演示案例。</p>
+</section>
+<section class="view" id="view-ch2">
+<header class="chapter-head"><span class="chapter-num">02</span><h2>考核评价量规</h2></header>
+<h3>考核结构</h3>
+<div class="diagram-scroll"><figure class="diagram"><svg viewBox="0 0 920 600" role="img" aria-labelledby="f5t"><title id="f5t">课程考核结构</title><rect x="290" y="25" width="340" height="72" rx="12" style="fill:var(--layer-1)"/><text x="460" y="71" text-anchor="middle" style="fill:var(--stroke-light);font-size:25">安全与规范 20%</text><rect x="290" y="135" width="340" height="72" rx="12" style="fill:var(--layer-2)"/><text x="460" y="181" text-anchor="middle" style="fill:var(--stroke-light);font-size:25">过程性实验 30%</text><rect x="290" y="245" width="340" height="72" rx="12" style="fill:var(--layer-3)"/><text x="460" y="291" text-anchor="middle" style="fill:var(--stroke-light);font-size:25">综合实操 25%</text><rect x="290" y="355" width="340" height="72" rx="12" style="fill:var(--layer-4)"/><text x="460" y="401" text-anchor="middle" style="fill:var(--stroke-light);font-size:25">报告与答辩 25%</text><text x="460" y="505" text-anchor="middle" style="fill:var(--accent-deep);font-size:24">安全门槛优先于分数</text></svg><figcaption>过程证据与安全规范决定成绩下限，结果展示不能抵消安全违规。</figcaption></figure></div>
+<table><thead><tr><th style="text-align:left">项目</th><th style="text-align:right">权重</th><th style="text-align:left">说明</th></tr></thead><tbody><tr><td style="text-align:left">安全与规范</td><td style="text-align:right">20%</td><td style="text-align:left">安全考核、实验纪律、收尾</td></tr><tr><td style="text-align:left">过程性实验</td><td style="text-align:right">30%</td><td style="text-align:left">日志、预测、对照、课堂参与</td></tr><tr><td style="text-align:left">综合实操</td><td style="text-align:right">25%</td><td style="text-align:left">真机或仿真综合任务</td></tr><tr><td style="text-align:left">报告与答辩</td><td style="text-align:right">25%</td><td style="text-align:left">证据、分析、表达、反思</td></tr></tbody></table>
+<p>安全门槛优先于分数：出现未授权运动、无视急停、真机使用 dummy 标定等行为，对应实操直接不合格，并按实验室制度处理。</p>
+<h3>综合实操评分</h3>
+<table><thead><tr><th style="text-align:left">维度</th><th style="text-align:right">分值</th><th style="text-align:left">优秀标准</th></tr></thead><tbody><tr><td style="text-align:left">方案设计</td><td style="text-align:right">10</td><td style="text-align:left">状态序列完整，验收指标可测量</td></tr><tr><td style="text-align:left">正确性</td><td style="text-align:right">20</td><td style="text-align:left">协议、单位、坐标、观测和控制律正确</td></tr><tr><td style="text-align:left">安全性</td><td style="text-align:right">20</td><td style="text-align:left">异常分支完整，停车与收尾可靠</td></tr><tr><td style="text-align:left">调试能力</td><td style="text-align:right">15</td><td style="text-align:left">单变量对照，证据支持根因</td></tr><tr><td style="text-align:left">记录与表达</td><td style="text-align:right">10</td><td style="text-align:left">命令、参数、日志、结论完整可复现</td></tr><tr><td style="text-align:left">创新与反思</td><td style="text-align:right">5</td><td style="text-align:left">能提出有依据的改进并说明局限</td></tr></tbody></table>
+<h3>报告评分细则</h3>
+<ul><li><strong>问题定义 10 分</strong>：目标、输入、输出、约束清楚。</li><li><strong>方法 20 分</strong>：公式、参数、状态机或流程图准确。</li><li><strong>实验证据 25 分</strong>：包含原始日志、曲线/截图和异常样例。</li><li><strong>分析 25 分</strong>：区分事实与假设，对照实验充分。</li><li><strong>安全与复现 10 分</strong>：收尾完整，他人可照文档复现。</li><li><strong>表达 10 分</strong>：结构清楚，图表规范，结论不过度外推。</li></ul>
+<h3>真机任务验收示例</h3>
+<p>task07 持续前进必须同时满足：</p>
+<ol><li>起立和步态阶段通过。</li><li>前进期速度峰值大于 0.02 m/s。</li><li>前进方向符合预期。</li><li><code>--cooldown</code> 窗口内停稳。</li><li>收尾完成趴下，按任务要求归零。</li><li>日志包含参数、速度、位置和收尾状态。</li></ol>
+<p>仅“机器人移动过”不能获得正确性满分。</p>
+<h3>仿真任务验收示例</h3>
+<p>stage3 必须同时满足：</p>
+<ol><li>重力投影函数通过水平姿态测试。</li><li>默认关节向量为 <code>(0,-0.65,1.3)</code> 循环。</li><li>观测为 45 维且顺序正确。</li><li>PD 输出为力矩并按控制范围限幅。</li><li>能解释仿真步态与真实硬件差异。</li></ol>
+<h3>评分校准</h3>
+<p>开课前由两名教师对同一份样例独立评分，差异超过 5 分的维度需讨论校准。课程中每周抽取一份报告进行盲评，避免不同小组标准漂移。</p>
+<h3>反馈语言</h3>
+<p>反馈应指出“证据—问题—下一步”。例如：“速度峰值为 0.003，未越过方向阈值；下一步先检查移动模式与步态，再检查轴死区。”</p>
+</section>
+<section class="view" id="view-ch3">
+<header class="chapter-head"><span class="chapter-num">03</span><h2>实验室管理与复盘</h2></header>
+<h3>设备与角色</h3>
+<p>每组设置安全员、操作员、记录员、分析员，轮换执行。安全员负责空间检查、悬挂确认、急停准备和停止指令；操作员只负责发送命令；记录员保存日志；分析员负责对照实验和报告。</p>
+<p>真机控制端应显示唯一会话编号，避免多个 GUI 同时发送 UDP 命令。实验结束后由安全员确认轴流停止、机器人姿态和 UDP 关闭。</p>
+<h3>版本管理</h3>
+<p>每轮课程冻结一个发布版本：</p>
+<ul><li>记录主仓库提交。</li><li>记录 <code>Lite3_rl_deploy</code> 与 <code>sdk_deploy</code> 子仓库提交。</li><li>导出 Python 依赖版本。</li><li>保存 <code>real_robot/assets/H.npy</code> 的标定日期和设备对应关系。</li><li>不把不同机器人的标定文件混用。</li></ul>
+<h3>实验预约与检查</h3>
+<p>预约单包含课程模块、设备、场地、时间和负责人。开课前 10 分钟完成检查表：</p>
+<ul><li>网络与状态端口。</li><li>电量与悬挂。</li><li>地面与线缆。</li><li>软急停命令。</li><li>日志保存位置。</li><li>实验后的归零/趴下负责人。</li></ul>
+<h3>异常与事故</h3>
+<p>出现跌倒、碰撞、异常抽搐、冒烟或线缆缠绕时：</p>
+<ol><li>安全员喊停并执行软急停或 hardware 急停。</li><li>不立即重新起立，先切断运动来源。</li><li>保护现场，记录时间、命令、状态和日志。</li><li>教师检查设备并决定是否恢复。</li><li>未确认安全前不得删除日志或重置固件零位。</li></ol>
+<p>事故复盘聚焦系统和流程，不归咎个人。重点检查权限、培训、检查表、状态反馈和急停可达性。</p>
+<h3>课程复盘</h3>
+<p>每轮课程结束后统计：</p>
+<ul><li>各任务首次通过率。</li><li>常见故障类别与分布。</li><li>安全考核未通过项目。</li><li>真机与仿真联合实验的差异。</li><li>学生报告中的概念误区。</li><li>文档与代码不一致之处。</li></ul>
+<p>根据统计更新讲义、测试和演示案例。代码修复应同时补充回归测试，防止同类问题再次进入课堂。</p>
+<h3>资产维护</h3>
+<ul><li><code>H_dummy.npy</code> 与真实 <code>H.npy</code> 分目录标识，dummy 不得作为真机默认资源。</li><li>YOLO 权重记录来源和版本，不随意替换。</li><li>仿真模型与策略路径由 <code>project_paths.py</code> 管理。</li><li>历史 task11 仅作阅读，不安排为学生运行入口。</li></ul>
+<h3>期末材料归档</h3>
+<p>归档课程版本、分组表、安全考核、实验日志、报告、评分表、复盘纪要和改进清单。学生数据按学校规定脱敏，不公开机器人网络配置和无关个人信息。</p>
+</section>
+</main>
+<script>
+const COURSE_NAME = document.documentElement.dataset.course || document.title;
+const main = document.querySelector('main');
+const views = [...document.querySelectorAll('.view')];
+const ids = views.map(v => v.id.replace(/^view-/, ''));
+const links = [...document.querySelectorAll('aside nav a')];
+const chapterNames = Object.fromEntries(
+  links.map(a => [a.getAttribute('href').slice(1), a.textContent.trim()])
+);
+const mobileSelect = document.querySelector('.mobile-nav select');
+const bar = document.querySelector('.course-bar');
+
+function firstId(){ return ids[0] || 'intro'; }
+function setText(sel, text){ const el = bar && bar.querySelector(sel); if (el) el.textContent = text; }
+
+function showView(id, updateHash){
+  if (!ids.includes(id)) id = firstId();
+  const idx = ids.indexOf(id);
+  views.forEach(v => v.classList.toggle('active', v.id === 'view-' + id));
+  links.forEach(a => a.classList.toggle('active', a.getAttribute('href') === '#' + id));
+  setText('.course-name', COURSE_NAME);
+  setText('.chapter-name', chapterNames[id] || '');
+  setText('.chapter-progress', (idx + 1) + ' / ' + ids.length);
+  const progress = document.getElementById('progress');
+  if (progress) progress.style.width = ((idx + 1) / ids.length * 100) + '%';
+  if (mobileSelect) mobileSelect.value = id;
+  main.scrollTop = 0;
+  if (updateHash) history.pushState(null, '', '#' + id);
+}
+
+links.forEach(a => a.addEventListener('click', e => {
+  e.preventDefault();
+  showView(a.getAttribute('href').slice(1), true);
+}));
+if (mobileSelect) mobileSelect.addEventListener('change', e => showView(e.target.value, true));
+window.addEventListener('popstate', () =>
+  showView(location.hash.slice(1) || firstId(), false));
+showView(location.hash.slice(1) || firstId(), false);
+</script>
+</body>
+</html>

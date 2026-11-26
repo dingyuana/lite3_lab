@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-course="公共基础课程">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>公共基础课程</title>
+<style>
+:root{
+  --ink:#1c2733; --ink-soft:#4d5a68; --ink-faint:#8a939d;
+  --paper:#f7f9fb; --accent:#2d6fc2; --accent-soft:#e6effb; --accent-deep:#1f4f8f;
+  --line:#e6e0d7; --sidebar:#141c26; --sidebar-ink:#a8b6c4;
+  --code-bg:#1e2430; --code-ink:#d8e2ee;
+  --layer-1:#8f4419; --layer-2:#a24e20; --layer-3:#b3572a;
+  --layer-4:#c2622d; --layer-5:#cf7a45; --stroke-light:#ffffff;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;height:100%}
+body{background:var(--paper);color:var(--ink);font:16.5px/1.85 -apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;overflow:hidden}
+a{color:var(--accent-deep)}
+#progress-wrap{position:fixed;top:0;left:0;right:0;height:3px;background:var(--line);z-index:60}
+#progress{height:100%;width:0;background:var(--accent);transition:width .25s ease}
+aside{position:fixed;top:0;left:0;bottom:0;width:270px;background:var(--sidebar);color:var(--sidebar-ink);display:flex;flex-direction:column;z-index:40}
+.brand{padding:30px 24px 20px;border-bottom:1px solid rgba(255,255,255,.09)}
+.brand h1{margin:0 0 6px;font:700 19px/1.5 "Songti SC","Noto Serif SC",serif;color:#fff}
+.brand p{margin:0;font-size:12.5px;opacity:.72}
+.brand .meta{margin-top:12px;font-size:12px;opacity:.55}
+aside nav{flex:1;overflow-y:auto;padding:14px 12px 30px}
+aside nav a{display:block;padding:9px 12px;margin:2px 0;border-radius:6px;color:var(--sidebar-ink);text-decoration:none;font-size:14px;line-height:1.5;border-left:3px solid transparent}
+aside nav a:hover{background:rgba(255,255,255,.06);color:#fff}
+aside nav a.active{background:rgba(255,255,255,.10);color:#fff;border-left-color:var(--accent)}
+.course-bar{position:fixed;top:3px;left:270px;right:0;height:52px;display:flex;align-items:center;gap:10px;padding:0 34px;background:var(--paper);border-bottom:1px solid var(--line);z-index:30;font-size:13.5px}
+.course-bar .course-name{font-weight:700;color:var(--ink)}
+.course-bar .sep,.course-bar .chapter-name{color:var(--ink-soft)}
+.course-bar .chapter-progress{margin-left:auto;color:var(--ink-faint);font-variant-numeric:tabular-nums}
+main{position:fixed;top:55px;left:270px;right:0;bottom:0;overflow-y:auto;padding:38px 34px 90px}
+.view{display:none;max-width:900px;margin:0 auto}
+.view.active{display:block}
+.chapter-head{margin:0 0 34px;padding-bottom:18px;border-bottom:2px solid var(--line)}
+.chapter-num{display:inline-block;margin-right:12px;color:var(--accent);font:700 14px/1 Helvetica,Arial,sans-serif;letter-spacing:.08em;vertical-align:middle}
+.chapter-head h2{display:inline;margin:0;font:700 clamp(22px,2.9vw,29px)/1.4 "Songti SC","Noto Serif SC",serif;vertical-align:middle}
+.chapter-head .era{display:block;margin-top:10px;color:var(--ink-faint);font:13px/1.5 Helvetica,Arial,sans-serif;letter-spacing:.04em}
+.view h3{font:700 18.5px/1.5 "Songti SC","Noto Serif SC",serif;margin:34px 0 14px;padding-left:12px;border-left:3px solid var(--accent)}
+.view h4,.view h5,.view h6{font:700 16.5px/1.5 "Songti SC","Noto Serif SC",serif;margin:26px 0 12px;color:var(--ink)}
+.view p{margin:0 0 18px}
+.view ul,.view ol{margin:0 0 18px;padding-left:26px}
+.view li{margin:0 0 7px}
+.view blockquote{margin:0 0 18px;padding:10px 18px;border-left:3px solid var(--accent-soft);background:var(--accent-soft);color:var(--ink-soft)}
+.view blockquote p{margin:0}
+.view hr{border:0;border-top:1px solid var(--line);margin:30px 0}
+.view code{font:13.5px/1.6 "SFMono-Regular",Consolas,monospace;background:var(--accent-soft);color:var(--accent-deep);padding:2px 5px;border-radius:3px}
+.view pre{background:var(--code-bg);color:var(--code-ink);padding:18px 20px;border-radius:6px;overflow-x:auto;margin:0 0 20px}
+.view pre code{background:none;color:inherit;padding:0;font-size:13.5px}
+.view table{width:100%;border-collapse:collapse;margin:0 0 22px;font-size:15px}
+.view th,.view td{border:1px solid var(--line);padding:9px 12px;text-align:left;vertical-align:top}
+.view th{background:var(--accent-soft);font-weight:700}
+.view img{max-width:100%;height:auto}
+figure.diagram{margin:28px 0;padding:0;break-inside:avoid}
+figure.diagram svg{width:100%;height:auto;min-width:540px;display:block}
+.diagram-scroll{overflow-x:auto}
+figure.diagram figcaption{margin-top:10px;color:var(--ink-faint);font-size:13.5px;text-align:center;line-height:1.6}
+.mobile-nav{display:none}
+@media (max-width:900px){
+  aside{display:none}
+  body{overflow:hidden}
+  .course-bar{display:none}
+  .mobile-nav{display:flex;position:fixed;top:3px;left:0;right:0;height:56px;align-items:center;gap:12px;padding:0 16px;background:var(--paper);border-bottom:1px solid var(--line);z-index:30}
+  .mobile-nav .m-title{font-weight:700;font-size:14px;white-space:nowrap;max-width:45%;overflow:hidden;text-overflow:ellipsis}
+  .mobile-nav select{flex:1;min-width:0;padding:7px 9px;border:1px solid var(--line);border-radius:6px;background:var(--paper);color:var(--ink);font-size:14px}
+  main{top:59px;left:0;right:0;padding:24px 18px 70px}
+  figure.diagram svg{min-width:540px}
+}
+@media print{
+  #progress-wrap,aside,.course-bar,.mobile-nav{display:none!important}
+  html,body{height:auto;overflow:visible;background:#fff}
+  main{position:static;height:auto;overflow:visible;padding:0}
+  .view,.view.active{display:block!important;max-width:none;margin:0}
+  .view{break-after:page;page-break-after:always}
+  .view:last-child{break-after:auto;page-break-after:auto}
+  figure.diagram,pre,table,blockquote{break-inside:avoid;page-break-inside:avoid}
+  figure.diagram svg{min-width:0;max-width:100%}
+  a{color:inherit;text-decoration:none}
+}
+</style>
+</head>
+<body>
+<div id="progress-wrap"><div id="progress"></div></div>
+<aside>
+  <div class="brand"><h1>公共基础课程</h1><p>真机与仿真共同先修模块</p><div class="meta">共 5 章 · 单章切换</div></div>
+  <nav><a href="#intro">00 课程与工程基础</a><a href="#ch1">01 坐标与单位</a><a href="#ch2">02 通信与实时系统</a><a href="#ch3">03 安全与实验规范</a><a href="#ch4">04 调试与科学记录</a></nav>
+</aside>
+<div class="course-bar">
+  <span class="course-name">公共基础课程</span><span class="sep">·</span>
+  <span class="chapter-name"></span><span class="chapter-progress"></span>
+</div>
+<div class="mobile-nav">
+  <span class="m-title">公共基础课程</span>
+  <select aria-label="选择章节"><option value="intro">00 课程与工程基础</option><option value="ch1">01 坐标与单位</option><option value="ch2">02 通信与实时系统</option><option value="ch3">03 安全与实验规范</option><option value="ch4">04 调试与科学记录</option></select>
+</div>
+<main>
+<section class="view" id="view-intro">
+<header class="chapter-head"><span class="chapter-num">00</span><h2>课程与工程基础</h2></header>
+<h3>学习目标</h3>
+<ul><li>说出四足机器人实验系统的五个基本环节。</li><li>区分真机实验与仿真实验各自能验证的问题。</li><li>使用“目标—约束—方案—验证”的工程流程完成一个小任务。</li><li>理解为什么教学代码也要版本管理、测试和安全边界。</li></ul>
+<h3>建议学时</h3>
+<p>2 学时，其中讲授 1 学时、小组讨论与实验设计 1 学时。</p>
+<h3>先修知识</h3>
+<p>基本 Python 语法、向量与三角函数初步知识。不需要预先掌握强化学习或 ROS2。</p>
+<h3>系统组成</h3>
+<div class="diagram-scroll"><figure class="diagram"><svg viewBox="0 0 860 520" role="img" aria-labelledby="f1t"><title id="f1t">四足机器人闭环控制</title><defs><marker id="a1" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" style="fill:var(--accent)"/></marker></defs><rect x="285" y="40" width="290" height="82" rx="14" style="fill:var(--accent-soft);stroke:var(--accent)"/><text x="430" y="88" text-anchor="middle" style="fill:var(--ink);font-size:24">感知</text><rect x="650" y="220" width="170" height="82" rx="14" style="fill:var(--accent-soft);stroke:var(--accent)"/><text x="735" y="268" text-anchor="middle" style="fill:var(--ink);font-size:24">决策</text><rect x="285" y="398" width="290" height="82" rx="14" style="fill:var(--accent-soft);stroke:var(--accent)"/><text x="430" y="446" text-anchor="middle" style="fill:var(--ink);font-size:24">执行</text><rect x="40" y="220" width="170" height="82" rx="14" style="fill:var(--accent-soft);stroke:var(--accent)"/><text x="125" y="268" text-anchor="middle" style="fill:var(--ink);font-size:24">反馈</text><circle cx="430" cy="260" r="72" style="fill:var(--paper);stroke:var(--line)"/><text x="430" y="270" text-anchor="middle" style="fill:var(--accent-deep);font-size:24">闭环</text><path d="M575 105 L735 210" style="fill:none;stroke:var(--accent);stroke-width:3" marker-end="url(#a1)"/><path d="M735 312 L575 435" style="fill:none;stroke:var(--accent);stroke-width:3" marker-end="url(#a1)"/><path d="M285 438 L210 312" style="fill:none;stroke:var(--accent);stroke-width:3" marker-end="url(#a1)"/><path d="M210 210 L285 105" style="fill:none;stroke:var(--accent);stroke-width:3" marker-end="url(#a1)"/></svg><figcaption>控制效果必须由反馈再次验证；缺少新鲜反馈时，继续输出动作可能放大误差。</figcaption></figure></div>
+<p>四足机器人实验可拆成五个环节：</p>
+<ol><li><strong>感知</strong>：关节编码器、IMU、超声波、相机、LiDAR。</li><li><strong>状态估计</strong>：姿态、速度、位置、目标身份与地图。</li><li><strong>决策</strong>：状态机、步态选择、PID、学习策略。</li><li><strong>执行</strong>：电机力矩、关节位置目标、速度指令。</li><li><strong>反馈</strong>：把执行结果再次送入感知与状态估计，形成闭环。</li></ol>
+<p>任何一环缺少时效性或符号约定，闭环都可能变成正反馈或失稳。</p>
+<h3>真机与仿真的分工</h3>
+<table><thead><tr><th style="text-align:left">维度</th><th style="text-align:left">真机 task</th><th style="text-align:left">仿真 stage</th></tr></thead><tbody><tr><td style="text-align:left">主要目的</td><td style="text-align:left">验证协议、状态机、安全与真实动态</td><td style="text-align:left">验证算法、控制律、观测与系统接口</td></tr><tr><td style="text-align:left">优势</td><td style="text-align:left">包含真实摩擦、冲击、延迟与硬件约束</td><td style="text-align:left">可重复、可加速、可注入故障</td></tr><tr><td style="text-align:left">局限</td><td style="text-align:left">有跌倒和损坏风险，实验成本高</td><td style="text-align:left">模型误差可能导致“仿真成功、真机失败”</td></tr><tr><td style="text-align:left">评价重点</td><td style="text-align:left">安全、稳定、可复现</td><td style="text-align:left">数值正确、边界完整、可解释</td></tr></tbody></table>
+<p>仿真不是真机的替代品。联合课程要求学生在相同坐标系和相同指令下比较两者，并解释差异来源。</p>
+<h3>工程流程</h3>
+<ol><li>明确任务：例如“低速前进 3 秒并停稳”。</li><li>列出约束：空间、速度、轴死区、指令超时、急停方式。</li><li>设计状态序列：起立、移动模式、步态、前进、停车、趴下、归零。</li><li>选择可观测量：状态码、四膝角、线速度、位置、帧龄。</li><li>制定验收条件：方向正确、速度超过死区、停车窗口内停稳。</li><li>实施与记录：保存日志、参数、环境与异常现象。</li><li>复盘：区分代码错误、参数错误、环境错误和硬件错误。</li></ol>
+<h3>教师演示</h3>
+<p>展示 task07 的完整状态序列。提问：如果停车后立即停止轴流，250 ms 超时会发生什么？引导学生认识到“归零”与“停稳”是两个不同事件。</p>
+<h3>学生活动</h3>
+<p>每组选择一个任务，填写一页设计卡：输入、输出、状态转换、安全约束、验收指标、失败后的收尾动作。</p>
+<h3>验收标准</h3>
+<ul><li>能完整绘制感知—决策—执行—反馈闭环。</li><li>能列出至少三项真机与仿真的差异。</li><li>设计卡中的验收条件可测量，不只写“机器人能动”。</li></ul>
+<h3>思考题</h3>
+<ol><li>为什么“代码运行无异常”不等于“机器人任务成功”？</li><li>如果仿真中前进方向正确，真机反向，应优先检查哪些环节？</li><li>状态机中的每个失败分支是否都需要安全收尾？</li></ol>
+</section>
+<section class="view" id="view-ch1">
+<header class="chapter-head"><span class="chapter-num">01</span><h2>坐标与单位</h2></header>
+<h3>学习目标</h3>
+<ul><li>正确读取机器人坐标系中的前后、左右和转向符号。</li><li>区分角度制与弧度制、线速度与角速度、物理量与协议轴值。</li><li>解释关节位置偏差和默认关节角在 RL 观测中的作用。</li><li>识别正负号、单位换算和缩放系数导致的控制错误。</li></ul>
+<h3>建议学时</h3>
+<p>2 学时，包含一次坐标方向核对练习。</p>
+<h3>先修知识</h3>
+<p>向量、基础三角函数和 Python NumPy。</p>
+<h3>坐标系</h3>
+<p>课程默认遵循右手系。描述方向时必须同时说明参考系：</p>
+<ul><li><code>pos_world</code>：世界坐标系中的位置。</li><li><code>vel_body</code>：机体坐标系中的速度；前进通常读取第 0 分量。</li><li><code>rpy</code>：横滚、俯仰、偏航角。</li><li>视觉标定：X 向右、Y 向前，原点为机器人地面投影。</li></ul>
+<p>不要把“图像坐标向右”直接当成“机器人向右”。Homography 的作用正是把像素坐标转换到地面米制坐标。</p>
+<h3>单位与范围</h3>
+<table><thead><tr><th style="text-align:left">量</th><th style="text-align:left">课程常用单位</th><th style="text-align:left">注意事项</th></tr></thead><tbody><tr><td style="text-align:left">长度</td><td style="text-align:left">m</td><td style="text-align:left">超声波阈值 1.0 m、1.3 m</td></tr><tr><td style="text-align:left">平面角</td><td style="text-align:left">rad 或 deg</td><td style="text-align:left">Python 三角函数使用 rad</td></tr><tr><td style="text-align:left">线速度</td><td style="text-align:left">m/s</td><td style="text-align:left">停稳阈值绝对值 &lt;0.02</td></tr><tr><td style="text-align:left">角速度</td><td style="text-align:left">rad/s</td><td style="text-align:left">转向需先确认符号</td></tr><tr><td style="text-align:left">频率</td><td style="text-align:left">Hz</td><td style="text-align:left">30 Hz 周期约 33.3 ms</td></tr><tr><td style="text-align:left">时间</td><td style="text-align:left">s</td><td style="text-align:left">超时、帧龄、稳定时间必须使用一致时钟</td></tr></tbody></table>
+<h3>关节角与默认姿态</h3>
+<p>Lite3 有 12 个驱动关节。RL 部署课程按每条腿的 HipX、HipY、Knee 顺序构造 12 维向量，默认位置模式为：</p>
+<pre><code class="language-text">(0.0, -0.65, 1.3) 重复 4 次</code></pre>
+<p>关节位置偏差为：</p>
+<pre><code class="language-text">qpos - default_qpos</code></pre>
+<p>观测构造错误会直接改变策略输入，即使模型文件完全正确，也可能导致动作错误。</p>
+<h3>协议轴值</h3>
+<div class="diagram-scroll"><figure class="diagram"><svg viewBox="0 0 880 430" role="img" aria-labelledby="f2t"><title id="f2t">物理速度与协议轴值转换</title><rect x="40" y="65" width="330" height="260" rx="18" style="fill:var(--paper);stroke:var(--line)"/><text x="205" y="120" text-anchor="middle" style="fill:var(--ink);font-size:26">物理速度</text><text x="205" y="185" text-anchor="middle" style="fill:var(--accent-deep);font-size:34">vx = -0.2 m/s</text><text x="205" y="250" text-anchor="middle" style="fill:var(--ink-soft);font-size:20">连续量 · 带单位 · 有方向</text><rect x="510" y="65" width="330" height="260" rx="18" style="fill:var(--accent-soft);stroke:var(--accent)"/><text x="675" y="120" text-anchor="middle" style="fill:var(--ink);font-size:26">协议轴值</text><text x="675" y="185" text-anchor="middle" style="fill:var(--accent-deep);font-size:34">axis ≤ -6554</text><text x="675" y="250" text-anchor="middle" style="fill:var(--ink-soft);font-size:20">离散量 · 缩放 · 越过死区</text><path d="M390 195 L485 195" style="fill:none;stroke:var(--accent);stroke-width:4" marker-end="url(#a2)"/><defs><marker id="a2" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" style="fill:var(--accent)"/></marker></defs><text x="440" y="165" text-anchor="middle" style="fill:var(--ink-soft);font-size:18">scale + deadzone</text></svg><figcaption>速度语义必须经过缩放和死区处理，才能变成固件可执行的动作。</figcaption></figure></div>
+<p>协议使用有符号 16 位轴值，速度与轴值之间需要缩放。课程中的前进、侧向、转向死区分别为：</p>
+<pre><code class="language-text">forward: 6553
+lateral: 12553
+yaw:     9553</code></pre>
+<p>死区不是“建议值”，而是固件行为边界。很小的后退命令若直接截断为 0，会导致机器人不后退；task12 因此把非零小输出至少推到 <code>deadzone + 1</code>。</p>
+<h3>教师演示</h3>
+<p>运行 task12 的 <code>--selfcheck</code>，展示反向后输出越过前进死区。再展示零值不会被补偿成死区，避免静止时蠕动。</p>
+<h3>学生活动</h3>
+<p>给定 <code>vx=-0.2 m/s</code>、<code>fwd_scale=20000</code>，手算原始轴值并提出安全补偿方法。使用 Python 验证结果。</p>
+<h3>验收标准</h3>
+<ul><li>所有数值都带单位。</li><li>能解释世界坐标与机体坐标的区别。</li><li>能正确构造 12 维默认关节向量。</li><li>能说明为什么零轴值不能做死区补偿。</li></ul>
+<h3>思考题</h3>
+<ol><li>偏航角与偏航角速度有什么区别？</li><li>如果策略输出被当作目标角度直接写入电机 <code>data.ctrl</code>，会产生什么问题？</li><li>图像标定中四个点的顺序为什么必须一致？</li></ol>
+</section>
+<section class="view" id="view-ch2">
+<header class="chapter-head"><span class="chapter-num">02</span><h2>通信与实时系统</h2></header>
+<h3>学习目标</h3>
+<ul><li>解释 UDP 命令帧和状态帧的基本结构。</li><li>理解心跳、轴流频率、帧龄和指令超时的作用。</li><li>区分“收到过数据”和“数据仍然新鲜”。</li><li>根据丢包、延迟和超时设计安全降级。</li></ul>
+<h3>建议学时</h3>
+<p>2 学时。</p>
+<h3>先修知识</h3>
+<p>网络字节序、IP 地址、端口和线程基础。</p>
+<h3>Lite3 通信模型</h3>
+<p>运动命令发往机器人 <code>43893</code> 端口，本机监听 <code>43897</code> 接收状态。命令头为 12 字节：</p>
+<pre><code class="language-text">command_code : uint32
+parameter    : uint32
+sequence     : uint32</code></pre>
+<p>使用小端格式 <code>&lt;III</code>。<code>0x0901</code> 是机器人状态帧，<code>0x0902</code> 是关节数据帧。状态码如 <code>(1,0,0)</code> 表示趴下，<code>(6,0,0)</code> 表示力控站立；<code>98</code> 是初始待机，不代表已经归零。</p>
+<h3>实时性</h3>
+<p>实时控制不是“线程越多越好”，而是每个周期能否在期限内产生有效输出。</p>
+<ul><li>心跳 5 Hz：维持连接与底层保活。</li><li>轴流 30 Hz：持续发送前进、侧向、转向三个轴。</li><li>轴流必须 ≥20 Hz：低于该频率可能触发约 250 ms 的指令超时。</li><li>视频跟踪：感知频率可以低于控制频率，但必须检查帧龄。</li></ul>
+<h3>帧龄</h3>
+<p>帧龄是“当前时刻减去数据产生时刻”，不是“当前时刻减去程序读取时刻”。</p>
+<p>错误做法是每次读取状态都把超声波时间戳刷新为当前时间，这会让已经停止上报的旧数据永远看起来新鲜。正确做法是保留原始状态帧的接收时间，再计算：</p>
+<pre><code class="language-text">age = now - original_receive_time</code></pre>
+<h3>安全降级</h3>
+<div class="diagram-scroll"><figure class="diagram"><svg viewBox="0 0 920 650" role="img" aria-labelledby="f3t"><title id="f3t">链路异常安全降级顺序</title><rect x="180" y="30" width="560" height="76" rx="12" style="fill:var(--accent-soft);stroke:var(--accent)"/><text x="460" y="78" text-anchor="middle" style="fill:var(--ink);font-size:24">1 停止增加新动作</text><rect x="180" y="145" width="560" height="76" rx="12" style="fill:var(--accent-soft);stroke:var(--accent)"/><text x="460" y="193" text-anchor="middle" style="fill:var(--ink);font-size:24">2 复位 PID 与上一帧动作</text><rect x="180" y="260" width="560" height="76" rx="12" style="fill:var(--accent-soft);stroke:var(--accent)"/><text x="460" y="308" text-anchor="middle" style="fill:var(--ink);font-size:24">3 保持轴流发送零值</text><rect x="180" y="375" width="560" height="76" rx="12" style="fill:var(--accent-soft);stroke:var(--accent)"/><text x="460" y="423" text-anchor="middle" style="fill:var(--ink);font-size:24">4 等待速度低于停稳阈值</text><rect x="180" y="490" width="560" height="76" rx="12" style="fill:var(--layer-1)"/><text x="460" y="538" text-anchor="middle" style="fill:var(--stroke-light);font-size:24">5 按状态趴下或归零</text><path d="M460 108 L460 138 M460 223 L460 253 M460 338 L460 368 M460 453 L460 483" style="fill:none;stroke:var(--accent);stroke-width:3" marker-end="url(#a3)"/><defs><marker id="a3" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" style="fill:var(--accent)"/></marker></defs></svg><figcaption>安全停车不是单个零值，而是从动作抑制到姿态收尾的完整序列。</figcaption></figure></div>
+<p>链路异常时，安全降级顺序通常为：</p>
+<ol><li>停止增加新动作。</li><li>清空 PID 积分与上一帧动作。</li><li>发送零轴值并保持轴流。</li><li>等待速度下降到停稳阈值。</li><li>根据任务状态选择趴下或归零。</li></ol>
+<p>task12 还使用独立看门狗。即使 YOLO 推理线程卡住，另一个线程也能在 1.0 s 无更新时停车。</p>
+<h3>教师演示</h3>
+<p>打开 task02 的状态输出，记录状态帧率；随后断开状态监听，观察数据年龄和运动拒绝逻辑。讨论“显示继续刷新”与“数据继续新鲜”的区别。</p>
+<h3>学生活动</h3>
+<p>测量 30 Hz 轴流的实际周期，计算周期抖动。人为停止视频帧更新，验证看门狗是否在设定时间内停车。</p>
+<h3>验收标准</h3>
+<ul><li>能解释 5 Hz 心跳与 30 Hz 轴流的不同职责。</li><li>能区分数据读取时刻与数据产生时刻。</li><li>能设计至少两级超时：普通异常停车、严重链路异常退出跟踪。</li></ul>
+<h3>思考题</h3>
+<ol><li>为什么 UDP 没有可靠重传也能用于周期控制？</li><li>看门狗为什么应独立于推理线程？</li><li>如果心跳正常但状态帧停止，哪些安全功能应失效？</li></ol>
+</section>
+<section class="view" id="view-ch3">
+<header class="chapter-head"><span class="chapter-num">03</span><h2>安全与实验规范</h2></header>
+<h3>学习目标</h3>
+<ul><li>执行真机实验前后的安全检查。</li><li>识别起立、移动、视觉跟踪和归零的高风险环节。</li><li>正确使用软急停和悬挂/防跌倒装置。</li><li>为仿真扰动实验设置边界，避免把仿真参数直接搬到真机。</li></ul>
+<h3>建议学时</h3>
+<p>2 学时，安全考核不合格不得进入真机运动实验。</p>
+<h3>先修知识</h3>
+<p>课程导学与基本电机控制概念。</p>
+<h3>真机安全门</h3>
+<p>每次运动实验前至少确认：</p>
+<ol><li>机器人电量满足要求；初始待机 <code>98</code> 且电量 ≤20% 时禁止首次起立。</li><li>悬挂或防跌倒装置可靠，人工扶稳人员知道何时撤离。</li><li>前方、后方至少留 2 m，侧面空间人工确认。</li><li>地面平整、干燥，线缆不缠绕腿部。</li><li>状态监听正常，能看到 <code>0x0901</code> 与 <code>0x0902</code>。</li><li>软急停命令可立即执行。</li><li>同一时间只有一个人发送运动指令。</li></ol>
+<h3>起立验收</h3>
+<p>不能只看状态码。课程要求同时满足：</p>
+<ul><li>状态为 <code>(6,0,0)</code>。</li><li>四膝均值在 60°~90°。</li><li>连续稳定 3 秒。</li></ul>
+<p>如果状态码变化但姿态不满足，应视为未完成，不应继续前进。</p>
+<h3>停车验收</h3>
+<p>发送零轴值只是停车过程的开始。必须保持轴流并观察 <code>abs(vel_body[0]) &lt; 0.02 m/s</code>。在观察窗口内未停稳，应记录失败并检查步态、地面、轴值和外部阻挡。</p>
+<h3>视觉跟踪安全</h3>
+<ul><li>首次跟踪必须悬挂验证转向符号。</li><li>使用真实 Homography，dummy 矩阵严禁真机。</li><li>目标丢失、帧过期、感知超时、超声波超时都应停车。</li><li>视觉距离过近只允许转向，过远则放弃目标。</li><li>手动控制与跟踪互斥，切换时先停运动。</li></ul>
+<h3>归零</h3>
+<p>归零会写固件零位偏移，不能随意重复。课程流程是先趴下，确认四膝进入趴下姿态，再发送 <code>0x21010C05</code>，等待 <code>(17,0,0)</code> 后回到趴下。</p>
+<h3>仿真安全</h3>
+<p>仿真允许切换重力、摩擦和施加 150 N 推力，但这些属于教学扰动，不是真机推荐参数。仿真实验应保存参数，使用重置功能恢复初始状态，并避免在模型未站稳时连续施加外力。</p>
+<h3>教师活动</h3>
+<p>进行 5 分钟安全口头考核。随机给出“状态 98 电量 18%”“超声波停止更新”“停车速度仍 0.05”等情境，要求学生给出下一步动作。</p>
+<h3>学生活动</h3>
+<p>每组完成安全检查表并签名。任何一项不通过，只允许运行只读 task01/task02 或仿真课程。</p>
+<h3>验收标准</h3>
+<ul><li>能完整复述软急停操作。</li><li>能区分起立、停车和归零的验收条件。</li><li>能列出视觉跟踪的五类停车触发条件。</li></ul>
+<h3>思考题</h3>
+<ol><li>为什么软急停不能替代悬挂和空间检查？</li><li>如果归零后仍不是 <code>(1,0,0)</code>，能否继续起立？</li><li>仿真中成功的推力实验，搬到真机前需要哪些额外验证？</li></ol>
+</section>
+<section class="view" id="view-ch4">
+<header class="chapter-head"><span class="chapter-num">04</span><h2>调试与科学记录</h2></header>
+<h3>学习目标</h3>
+<ul><li>用可复现日志描述实验，而不是只记录“能动/不能动”。</li><li>使用故障树定位协议、状态机、控制参数和环境问题。</li><li>设计单变量对照实验。</li><li>按要求提交实验报告与证据。</li></ul>
+<h3>建议学时</h3>
+<p>2 学时。</p>
+<h3>先修知识</h3>
+<p>Python 运行与基础统计。</p>
+<h3>最小记录集</h3>
+<p>每次实验至少记录：</p>
+<ul><li>日期、设备/软件版本、Git 提交或文件版本。</li><li>机器人 IP、状态端口、视频地址。</li><li>任务入口和完整命令参数。</li><li>地面、空间、电量、是否悬挂。</li><li>状态码、四膝、速度、位置、帧龄等观测。</li><li>异常发生时刻、日志和最终收尾状态。</li></ul>
+<p>只写“前进失败”无法复现；应写“forward=9000、持续 3 s、vel 峰值 0.003、状态保持 (6,0,0)、前方无障碍”。</p>
+<h3>故障树</h3>
+<p>以“机器人不前进”为例：</p>
+<ol><li>是否收到新鲜状态帧？否则检查网络、端口和接收线程。</li><li>是否处于移动模式且步态正确？否则检查状态机。</li><li>是否站立稳定、四膝合理？否则先解决姿态。</li><li>轴值是否越过死区？否则调整速度映射。</li><li>是否有超声波拦截？否则检查距离与数据龄。</li><li>是否有外部阻挡或地面打滑？否则进行环境对照。</li></ol>
+<p>每次只改变一个变量，避免同时调速度、PID、步态和标定。</p>
+<h3>数值检查</h3>
+<ul><li>重力投影：水平姿态应接近 <code>(0,0,-1)</code>。</li><li>PD 力矩：目标为零、当前位置为正时应产生负力矩。</li><li>观测维度：3+3+3+12+12+12=45。</li><li>轴死区：非零小输出越过边界，零输出仍为零。</li><li>停车：观察窗口结束后速度必须低于阈值。</li></ul>
+<h3>教师演示</h3>
+<p>故意把 <code>--cooldown</code> 设置为很短值，展示 task07 不会把“未停稳”误报为成功。再展示日志如何区分方向失败与停车失败。</p>
+<h3>学生活动</h3>
+<p>两人一组记录同一实验，交换日志后仅凭记录复现命令并预测结果。无法复现的项目回到记录中补充证据。</p>
+<h3>验收标准</h3>
+<ul><li>报告包含完整命令、参数和观测数据。</li><li>至少进行一次单变量对照。</li><li>故障结论有证据支持，不把猜测写成根因。</li><li>所有真机实验都有收尾状态记录。</li></ul>
+<h3>思考题</h3>
+<ol><li>为什么速度峰值和位移不能互相替代？</li><li>如果仅修改 PID 后现象消失，能否直接认定 PID 是唯一根因？</li><li>哪些日志字段在真机事故复盘中最重要？</li></ol>
+</section>
+</main>
+<script>
+const COURSE_NAME = document.documentElement.dataset.course || document.title;
+const main = document.querySelector('main');
+const views = [...document.querySelectorAll('.view')];
+const ids = views.map(v => v.id.replace(/^view-/, ''));
+const links = [...document.querySelectorAll('aside nav a')];
+const chapterNames = Object.fromEntries(
+  links.map(a => [a.getAttribute('href').slice(1), a.textContent.trim()])
+);
+const mobileSelect = document.querySelector('.mobile-nav select');
+const bar = document.querySelector('.course-bar');
+
+function firstId(){ return ids[0] || 'intro'; }
+function setText(sel, text){ const el = bar && bar.querySelector(sel); if (el) el.textContent = text; }
+
+function showView(id, updateHash){
+  if (!ids.includes(id)) id = firstId();
+  const idx = ids.indexOf(id);
+  views.forEach(v => v.classList.toggle('active', v.id === 'view-' + id));
+  links.forEach(a => a.classList.toggle('active', a.getAttribute('href') === '#' + id));
+  setText('.course-name', COURSE_NAME);
+  setText('.chapter-name', chapterNames[id] || '');
+  setText('.chapter-progress', (idx + 1) + ' / ' + ids.length);
+  const progress = document.getElementById('progress');
+  if (progress) progress.style.width = ((idx + 1) / ids.length * 100) + '%';
+  if (mobileSelect) mobileSelect.value = id;
+  main.scrollTop = 0;
+  if (updateHash) history.pushState(null, '', '#' + id);
+}
+
+links.forEach(a => a.addEventListener('click', e => {
+  e.preventDefault();
+  showView(a.getAttribute('href').slice(1), true);
+}));
+if (mobileSelect) mobileSelect.addEventListener('change', e => showView(e.target.value, true));
+window.addEventListener('popstate', () =>
+  showView(location.hash.slice(1) || firstId(), false));
+showView(location.hash.slice(1) || firstId(), false);
+</script>
+</body>
+</html>

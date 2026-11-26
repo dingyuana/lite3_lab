@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-course="真机控制课程">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>真机控制课程</title>
+<style>
+:root{
+  --ink:#1c2733; --ink-soft:#4d5a68; --ink-faint:#8a939d;
+  --paper:#fbf9f6; --accent:#c2622d; --accent-soft:#f8ece3; --accent-deep:#9c4a1e;
+  --line:#e6e0d7; --sidebar:#16202b; --sidebar-ink:#a8b6c4;
+  --code-bg:#1e2430; --code-ink:#d8e2ee;
+  --layer-1:#8f4419; --layer-2:#a24e20; --layer-3:#b3572a;
+  --layer-4:#c2622d; --layer-5:#cf7a45; --stroke-light:#ffffff;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;height:100%}
+body{background:var(--paper);color:var(--ink);font:16.5px/1.85 -apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;overflow:hidden}
+a{color:var(--accent-deep)}
+#progress-wrap{position:fixed;top:0;left:0;right:0;height:3px;background:var(--line);z-index:60}
+#progress{height:100%;width:0;background:var(--accent);transition:width .25s ease}
+aside{position:fixed;top:0;left:0;bottom:0;width:270px;background:var(--sidebar);color:var(--sidebar-ink);display:flex;flex-direction:column;z-index:40}
+.brand{padding:30px 24px 20px;border-bottom:1px solid rgba(255,255,255,.09)}
+.brand h1{margin:0 0 6px;font:700 19px/1.5 "Songti SC","Noto Serif SC",serif;color:#fff}
+.brand p{margin:0;font-size:12.5px;opacity:.72}
+.brand .meta{margin-top:12px;font-size:12px;opacity:.55}
+aside nav{flex:1;overflow-y:auto;padding:14px 12px 30px}
+aside nav a{display:block;padding:9px 12px;margin:2px 0;border-radius:6px;color:var(--sidebar-ink);text-decoration:none;font-size:14px;line-height:1.5;border-left:3px solid transparent}
+aside nav a:hover{background:rgba(255,255,255,.06);color:#fff}
+aside nav a.active{background:rgba(255,255,255,.10);color:#fff;border-left-color:var(--accent)}
+.course-bar{position:fixed;top:3px;left:270px;right:0;height:52px;display:flex;align-items:center;gap:10px;padding:0 34px;background:var(--paper);border-bottom:1px solid var(--line);z-index:30;font-size:13.5px}
+.course-bar .course-name{font-weight:700;color:var(--ink)}
+.course-bar .sep,.course-bar .chapter-name{color:var(--ink-soft)}
+.course-bar .chapter-progress{margin-left:auto;color:var(--ink-faint);font-variant-numeric:tabular-nums}
+main{position:fixed;top:55px;left:270px;right:0;bottom:0;overflow-y:auto;padding:38px 34px 90px}
+.view{display:none;max-width:900px;margin:0 auto}
+.view.active{display:block}
+.chapter-head{margin:0 0 34px;padding-bottom:18px;border-bottom:2px solid var(--line)}
+.chapter-num{display:inline-block;margin-right:12px;color:var(--accent);font:700 14px/1 Helvetica,Arial,sans-serif;letter-spacing:.08em;vertical-align:middle}
+.chapter-head h2{display:inline;margin:0;font:700 clamp(22px,2.9vw,29px)/1.4 "Songti SC","Noto Serif SC",serif;vertical-align:middle}
+.chapter-head .era{display:block;margin-top:10px;color:var(--ink-faint);font:13px/1.5 Helvetica,Arial,sans-serif;letter-spacing:.04em}
+.view h3{font:700 18.5px/1.5 "Songti SC","Noto Serif SC",serif;margin:34px 0 14px;padding-left:12px;border-left:3px solid var(--accent)}
+.view h4,.view h5,.view h6{font:700 16.5px/1.5 "Songti SC","Noto Serif SC",serif;margin:26px 0 12px;color:var(--ink)}
+.view p{margin:0 0 18px}
+.view ul,.view ol{margin:0 0 18px;padding-left:26px}
+.view li{margin:0 0 7px}
+.view blockquote{margin:0 0 18px;padding:10px 18px;border-left:3px solid var(--accent-soft);background:var(--accent-soft);color:var(--ink-soft)}
+.view blockquote p{margin:0}
+.view hr{border:0;border-top:1px solid var(--line);margin:30px 0}
+.view code{font:13.5px/1.6 "SFMono-Regular",Consolas,monospace;background:var(--accent-soft);color:var(--accent-deep);padding:2px 5px;border-radius:3px}
+.view pre{background:var(--code-bg);color:var(--code-ink);padding:18px 20px;border-radius:6px;overflow-x:auto;margin:0 0 20px}
+.view pre code{background:none;color:inherit;padding:0;font-size:13.5px}
+.view table{width:100%;border-collapse:collapse;margin:0 0 22px;font-size:15px}
+.view th,.view td{border:1px solid var(--line);padding:9px 12px;text-align:left;vertical-align:top}
+.view th{background:var(--accent-soft);font-weight:700}
+.view img{max-width:100%;height:auto}
+figure.diagram{margin:28px 0;padding:0;break-inside:avoid}
+figure.diagram svg{width:100%;height:auto;min-width:540px;display:block}
+.diagram-scroll{overflow-x:auto}
+figure.diagram figcaption{margin-top:10px;color:var(--ink-faint);font-size:13.5px;text-align:center;line-height:1.6}
+.mobile-nav{display:none}
+@media (max-width:900px){
+  aside{display:none}
+  body{overflow:hidden}
+  .course-bar{display:none}
+  .mobile-nav{display:flex;position:fixed;top:3px;left:0;right:0;height:56px;align-items:center;gap:12px;padding:0 16px;background:var(--paper);border-bottom:1px solid var(--line);z-index:30}
+  .mobile-nav .m-title{font-weight:700;font-size:14px;white-space:nowrap;max-width:45%;overflow:hidden;text-overflow:ellipsis}
+  .mobile-nav select{flex:1;min-width:0;padding:7px 9px;border:1px solid var(--line);border-radius:6px;background:var(--paper);color:var(--ink);font-size:14px}
+  main{top:59px;left:0;right:0;padding:24px 18px 70px}
+  figure.diagram svg{min-width:540px}
+}
+@media print{
+  #progress-wrap,aside,.course-bar,.mobile-nav{display:none!important}
+  html,body{height:auto;overflow:visible;background:#fff}
+  main{position:static;height:auto;overflow:visible;padding:0}
+  .view,.view.active{display:block!important;max-width:none;margin:0}
+  .view{break-after:page;page-break-after:always}
+  .view:last-child{break-after:auto;page-break-after:auto}
+  figure.diagram,pre,table,blockquote{break-inside:avoid;page-break-inside:avoid}
+  figure.diagram svg{min-width:0;max-width:100%}
+  a{color:inherit;text-decoration:none}
+}
+</style>
+</head>
+<body>
+<div id="progress-wrap"><div id="progress"></div></div>
+<aside>
+  <div class="brand"><h1>真机控制课程</h1><p>大学生实训 · 16 学时</p><div class="meta">共 6 章 · 单章切换</div></div>
+  <nav><a href="#intro">00 Lite3 大学生真机控制课程导学</a><a href="#ch1">01 Lite3 真机协议与实验安全</a><a href="#ch2">02 Lite3 基础控制实验</a><a href="#ch3">03 Lite3 综合控制实验</a><a href="#ch4">04 Lite3 人体视觉跟随实验</a><a href="#ch5">05 Lite3 实训考核与故障排查</a></nav>
+</aside>
+<div class="course-bar">
+  <span class="course-name">真机控制课程</span><span class="sep">·</span>
+  <span class="chapter-name"></span><span class="chapter-progress"></span>
+</div>
+<div class="mobile-nav">
+  <span class="m-title">真机控制课程</span>
+  <select aria-label="选择章节"><option value="intro">00 Lite3 大学生真机控制课程导学</option><option value="ch1">01 Lite3 真机协议与实验安全</option><option value="ch2">02 Lite3 基础控制实验</option><option value="ch3">03 Lite3 综合控制实验</option><option value="ch4">04 Lite3 人体视觉跟随实验</option><option value="ch5">05 Lite3 实训考核与故障排查</option></select>
+</div>
+<main>
+<section class="view" id="view-intro">
+<header class="chapter-head"><span class="chapter-num">00</span><h2>Lite3 大学生真机控制课程导学</h2></header>
+<h3>学习目标</h3>
+<p>完成本课程后，学生应能够：</p>
+<ol><li>说明 Lite3 真机项目中的 UDP 命令、状态帧、关节帧、心跳、轴流和状态机之间的关系。</li><li>在教师指导下完成链路检查、只读观测、起立/趴下/归零、低速移动和多轴方向验证。</li><li>根据状态三元组和遥测数据判断动作是否完成，不把“命令已发送”误认为“机器人已执行”。</li><li>使用 task10 图形界面完成手动控制，并理解姿态门控、前后超声波防撞与侧移风险。</li><li>完成 task12 的人体检测、单应标定、离线验证、PID 跟随和安全停车实验。</li><li>识别帧龄、感知超时、看门狗、死区和 dummy 标定拦截等安全机制，形成可复现的排障记录。</li></ol>
+<h3>建议学时</h3>
+<p>总建议学时为 <strong>16 学时</strong>，每次 2 学时；可按设备数量与先修水平调整。</p>
+<table><thead><tr><th style="text-align:left">单元</th><th style="text-align:left">对应文件</th><th style="text-align:right">理论/演示</th><th style="text-align:right">学生实操</th><th style="text-align:right">小计</th></tr></thead><tbody><tr><td style="text-align:left">课程与安全入门</td><td style="text-align:left">01、02</td><td style="text-align:right">2</td><td style="text-align:right">0</td><td style="text-align:right">2</td></tr><tr><td style="text-align:left">基础控制实验</td><td style="text-align:left">03：task01/02/03</td><td style="text-align:right">1</td><td style="text-align:right">3</td><td style="text-align:right">4</td></tr><tr><td style="text-align:left">移动模式与点动</td><td style="text-align:left">03：task05/06</td><td style="text-align:right">1</td><td style="text-align:right">3</td><td style="text-align:right">4</td></tr><tr><td style="text-align:left">综合控制实验</td><td style="text-align:left">04：task07/08/09/10</td><td style="text-align:right">1</td><td style="text-align:right">3</td><td style="text-align:right">4</td></tr><tr><td style="text-align:left">视觉跟随实验</td><td style="text-align:left">05：task12</td><td style="text-align:right">0.5</td><td style="text-align:right">1.5</td><td style="text-align:right">2</td></tr><tr><td style="text-align:left">考核与复盘</td><td style="text-align:left">06</td><td style="text-align:right">0.5</td><td style="text-align:right">1.5</td><td style="text-align:right">2</td></tr></tbody></table>
+<blockquote><p>真机时间包含等待机器人起立、停稳、趴下和归零的时间。建议每组 3～4 人，分别承担操作员、安全员、记录员和命令行观察员；角色轮换。不要在学时末仓促进行首次起立。</p></blockquote>
+<h3>先修知识</h3>
+<ul><li>Python 基础：函数、参数、异常、线程概念，以及命令行运行脚本。</li><li>计算机网络基础：IP 地址、端口、UDP 无连接通信；知道 UDP 发送成功不等于对端已执行。</li><li>数学基础：二维坐标、角度、速度、比例—积分—微分（PID）与误差反馈。</li><li>图像基础：像素坐标、仿射/单应变换、目标检测框的基本概念。</li><li>实验纪律：能执行stop、清场、扶稳和异常上报，不擅自修改阈值或绕过安全门控。</li></ul>
+<p>不要求事先掌握机器人运动学或 YOLO 训练；本课程重点是端到端控制和安全验证。</p>
+<h3>核心概念</h3>
+<h4>项目地图与历史编号</h4>
+<p>所有真机脚本位于同一目录，公共协议实现为 <code>lite3_common.py</code>。教学运行顺序如下：</p>
+<table><thead><tr><th style="text-align:left">任务</th><th style="text-align:left">入口</th><th style="text-align:left">教学定位</th></tr></thead><tbody><tr><td style="text-align:left">task01</td><td style="text-align:left"><code>task01_heartbeat.py</code></td><td style="text-align:left">心跳与双向链路统计</td></tr><tr><td style="text-align:left">task02</td><td style="text-align:left"><code>task02_state_receiver.py</code></td><td style="text-align:left">只读状态与关节观测</td></tr><tr><td style="text-align:left">task03</td><td style="text-align:left"><code>task03_stand_to_force.py</code></td><td style="text-align:left">起立、稳定站立、趴下、归零</td></tr><tr><td style="text-align:left">task05</td><td style="text-align:left"><code>task05_move_mode_low_gait.py</code></td><td style="text-align:left">移动模式与低速步态准备，不前进</td></tr><tr><td style="text-align:left">task06</td><td style="text-align:left"><code>task06_axis_tap.py</code></td><td style="text-align:left">短时前进点动、死区和停车观察</td></tr><tr><td style="text-align:left">task07</td><td style="text-align:left"><code>task07_axis_stream_forward.py</code></td><td style="text-align:left">持续前进与停车确认</td></tr><tr><td style="text-align:left">task08</td><td style="text-align:left"><code>task08_ultrasonic_guard_forward.py</code></td><td style="text-align:left">前后超声波保护前进</td></tr><tr><td style="text-align:left">task09</td><td style="text-align:left"><code>task09_axis_directions.py</code></td><td style="text-align:left">前进、后退、左移、右移符号验证</td></tr><tr><td style="text-align:left">task10</td><td style="text-align:left"><code>task10_gui.py</code></td><td style="text-align:left">键盘、视频、状态与控制面板</td></tr><tr><td style="text-align:left">task12</td><td style="text-align:left"><code>task12_follow.py</code></td><td style="text-align:left">标定与人体视觉跟随</td></tr></tbody></table>
+<p><strong>task04 在历史版本中缺失，不是学生漏做，不需要补写或补跑。task11 已并入 task12</strong>；<code>legacy/task11_follow.py</code> 仅用于阅读历史实现，不得作为安装、测试或课堂运行入口。</p>
+<h4>两个教学端口与两条数据路径</h4>
+<div class="diagram-scroll"><figure class="diagram"><svg viewBox="0 0 920 520" role="img" aria-labelledby="r-link-title"><title id="r-link-title">真机 UDP 指令与状态上报闭环</title><defs><marker id="r-arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" style="fill:var(--accent)"/></marker></defs><g font-family="Helvetica,Arial,sans-serif" text-anchor="middle"><rect x="190" y="24" width="540" height="72" rx="14" style="fill:var(--accent-soft);stroke:var(--accent)"/><text x="460" y="55" font-size="22" style="fill:var(--ink)">本机控制端</text><text x="460" y="80" font-size="16" style="fill:var(--ink-soft)">12 字节命令 → 192.168.1.120:43893</text><line x1="460" y1="98" x2="460" y2="132" stroke-width="3" style="stroke:var(--accent)" marker-end="url(#r-arrow)"/><rect x="190" y="136" width="540" height="72" rx="14" style="fill:var(--paper);stroke:var(--line)"/><text x="460" y="167" font-size="22" style="fill:var(--ink)">机器人控制器</text><text x="460" y="192" font-size="16" style="fill:var(--ink-soft)">接收命令并执行；发送成功不等于执行完成</text><line x1="460" y1="210" x2="460" y2="244" stroke-width="3" style="stroke:var(--accent)" marker-end="url(#r-arrow)"/><rect x="190" y="248" width="540" height="72" rx="14" style="fill:var(--accent-soft);stroke:var(--accent)"/><text x="460" y="279" font-size="22" style="fill:var(--ink)">状态与关节上报</text><text x="460" y="304" font-size="16" style="fill:var(--ink-soft)">0x0901 / 0x0902 → 本机 UDP 43897</text><line x1="460" y1="322" x2="460" y2="356" stroke-width="3" style="stroke:var(--accent)" marker-end="url(#r-arrow)"/><rect x="190" y="360" width="540" height="72" rx="14" style="fill:var(--paper);stroke:var(--line)"/><text x="460" y="391" font-size="22" style="fill:var(--ink)">新鲜度与状态确认</text><text x="460" y="416" font-size="16" style="fill:var(--ink-soft)">检查帧龄、状态三元组、关节与速度证据</text><path d="M730 396 C850 396 850 60 748 60" fill="none" stroke-width="3" stroke-dasharray="8 6" style="stroke:var(--accent-deep)" marker-end="url(#r-arrow)"/><text x="842" y="232" font-size="16" style="fill:var(--accent-deep)" transform="rotate(90 842 232)">反馈决定下一步</text></g></svg><figcaption>发送计数只证明本机尝试发出；收到有效且新鲜的上报帧，才能形成可验证的闭环。</figcaption></figure></div>
+<ul><li>控制器向机器人默认 <code>192.168.1.120:43893</code> 发送 UDP 命令。</li><li>状态接收端默认在本机 UDP <code>43897</code> 监听。实际机器人上报目标必须由实验教师预先配置并验证；代码绑定端口本身不能证明上报路由正确。</li><li>指令路径与上报路径共同构成闭环。只有“发送计数增长”只能证明本机尝试发送；同时收到有效 <code>0x0901</code> 状态帧，才可确认双向链路可用。</li></ul>
+<h4>状态不是单字节</h4>
+<p>公共模块用三元组 <code>(basic, gait, motion)</code> 描述机器人状态。重点掌握：</p>
+<ul><li><code>(98,0,0)</code>：运控程序启动后的初始待机，尚未触发首次起立；不是故障，也不是站立或回零成功。</li><li><code>(1,0,0)</code>：趴下。</li><li><code>(4,0,0)</code>、<code>(5,0,0)</code>：准备起立、正在起立。</li><li><code>(6,0,0)</code>：力控站立、平地低速、静止。</li><li><code>(6,0,1)</code>：力控站立、平地低速、踏步/扭动，属于移动就绪姿态。</li><li><code>(7,0,0)</code>：正在趴下。</li><li><code>(17,0,0)</code>：回零。</li><li><code>(8,0,0)</code>：失控保护。</li></ul>
+<h4>数据新鲜度与动作确认</h4>
+<ul><li><code>get_state()</code> 和 <code>get_joint()</code> 默认只返回帧龄小于 0.5 s 的数据；过期返回 <code>None</code>。</li><li>task03 发起立后的成功判据为 <code>(6,0,0)</code> 且四膝均值处于 60°～90°，连续 3 s；若启动时已满足单次稳定判据，脚本会跳过起立，此时应通过保持阶段补足连续稳定证据。</li><li>task05/06/07/08/09 的移动准备要求 <code>basic=6</code>、<code>gait=0</code> 且四膝均值处于 60°～130°；此时 <code>motion=0</code> 或 <code>motion=1</code> 都可能有效。</li><li>趴下辅助判据为四膝均值大于 130°；公共 <code>ensure_sit()</code> 还要求状态稳定在 <code>(1,0,0)</code>。</li><li>公共 <code>ensure_home()</code> 要求先稳定趴下，再观察 <code>(17,0,0)</code>，随后回到 <code>(1,0,0)</code>；未见 17 或未返回趴下都不算成功。</li></ul>
+<h4>零值轴流与死区</h4>
+<p>移动模式就绪后，脚本通常以 30 Hz 持续发送前向、侧向、偏航三个轴值。前进、侧向、偏航的代码死区分别为 <strong>6553、12553、9553</strong>。正值必须大于对应死区，负值必须小于对应死区的相反数，零值始终保持零。</p>
+<p>停车时先发全轴零值并维持轴流，让机器人减速，而不是立即关闭 UDP。代码注释指出轴指令超时可能使底层接管；课堂实验应始终保留停车观察时间。</p>
+<h3>教师演示步骤</h3>
+<ol><li>展示项目目录，指出 <code>README.md</code>、<code>lite3_common.py</code>、<code>assets/</code>、<code>tests/</code>、<code>legacy/</code> 和各任务入口。说明本次只按现有代码教学，不现场修改代码。</li><li>在 WSL 中进入项目目录，确认默认 IP、状态端口和 RTSP 地址符合本实验室配置。若不同，记录实际参数，并在命令中显式传入。</li><li>演示环境检查与依赖安装；不要在机器人已起立时才开始排查依赖。</li><li>展示软急停命令和人工扶稳位置，强调软急停不是物理断电，也不能替代机械防护。</li><li>运行 <code>python3 task01_heartbeat.py --duration 5</code>，解释发送、状态、关节帧三类计数，以及 ICMP 端口不可达的含义。</li><li>运行 <code>python3 task02_state_receiver.py --duration 5 --joints</code>，指出状态三元组、关节角度、前后超声波和身体速度。</li><li>在悬挂或护架条件下演示 task03 的完整状态转换，让学生口述每一步成功证据。</li><li>展示 task12 的离线入口：<code>python3 task12_follow.py --selfcheck</code> 和 <code>python3 task12_follow.py --offline --dummy-h</code>，明确它们不会发送运动指令。</li><li>按<a href="02-协议与安全.md" target="_blank" rel="noopener">02-协议与安全.md</a>完成安全交底，再分组进入真机实操。</li></ol>
+<h3>学生实操步骤</h3>
+<h4>实验前检查</h4>
+<ol><li>三人复述操作员、安全员和记录员职责，确认所有人知道停止口令。</li><li>清理机器人前后至少 2 m 范围，并额外确认侧面空间；侧移没有超声波保护。</li><li>检查悬挂、护架或人工扶稳条件，检查线缆未缠绕腿部。</li><li>确认机器人电量满足实验要求；初始待机 98 下首次起立要求电量高于 20%。</li><li>关闭其他可能向同一机器人发送运动命令的客户端，避免多个控制源竞争。</li><li>在 WSL 项目根目录运行以下命令：</li></ol>
+<pre><code class="language-bash">cd ~/lite3_lab/real_robot
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+sudo apt install python3-tk</code></pre>
+<p>若环境已由教师预装，不要重复覆盖；先执行 <code>python3 --version</code>、<code>python3 -c &quot;import cv2, numpy, PIL&quot;</code> 检查。</p>
+<h4>课堂记录模板</h4>
+<p>每次真机运行记录以下字段，可直接写入实验报告：</p>
+<ul><li>日期、组号、任务名、机器人 IP、本地状态端口、命令及参数。</li><li>运行前状态三元组、电量、四膝均值、前后距离。</li><li>关键日志时间点、动作期速度峰值、停车后速度、是否观察到目标状态。</li><li>异常时的界面提示或终端原文，不凭记忆改写。</li><li>是否按 T/Esc/停止按钮/Ctrl-C 退出，退出后机器人姿态与运动轴是否归零。</li><li>教师安全检查签字。</li></ul>
+<h4>Windows 访问说明</h4>
+<p>Windows 可在资源管理器打开：</p>
+<pre><code class="language-text">\\wsl.localhost\&lt;发行版&gt;\home\&lt;用户&gt;\lite3_lab\real_robot</code></pre>
+<p>但 <strong>Python 命令应在 WSL 的项目目录中运行</strong>。不要把 Windows 版 Python 的 <code>.venv</code> 与 WSL 混用；RTSP、UDP 上报和相机显示也应在同一套已验证的环境中调试。</p>
+<h3>思考题</h3>
+<ol><li>为什么 task01 的“发送心跳”计数增长，仍不足以证明机器人已经执行了运动指令？</li><li><code>(98,0,0)</code>、<code>(6,0,0)</code>、<code>(6,0,1)</code>、<code>(17,0,0)</code> 各自能说明什么，不能说明什么？</li><li>为什么起立阶段只发心跳，而移动阶段需要持续发送三轴零值？</li><li>为什么“看到四膝角度大于 130°”仍不能替代公共归零函数的状态序列确认？</li><li>为什么侧移实验必须人工清场，不能依赖前后超声波？</li><li>task04 与 task11 应如何处理，为什么不应把历史脚本作为现行入口？</li></ol>
+<h3>验收标准</h3>
+<ul><li>能正确说出本课程的任务顺序及 task04 缺失、task11 并入 task12 的原因。</li><li>能在 WSL 中进入项目目录并检查依赖，不混淆 Windows 与 WSL 运行环境。</li><li>能默写或准确指出默认控制 IP/端口、默认本地状态端口及“上报目标需预先配置”的限制。</li><li>能解释初始待机 98、稳定站立、移动就绪、回零完成四类判据。</li><li>实操前完成清场、扶稳、控制源检查和停止口令复述。</li><li>能运行 task01/task02 并获得可解释的状态与关节观测结果。</li><li>能演示 task12 的离线命令，并说明 dummy 模式为何不得用于真机。</li><li>实验记录包含命令、状态证据、异常原文和退出后姿态，而非只有“成功”二字。</li></ul>
+<h3>常见错误</h3>
+<table><thead><tr><th style="text-align:left">错误做法</th><th style="text-align:left">后果</th><th style="text-align:left">正确做法</th></tr></thead><tbody><tr><td style="text-align:left">在 Windows 中直接双击脚本或混用虚拟环境</td><td style="text-align:left">导入失败、显示或网络环境不一致</td><td style="text-align:left">在 WSL 项目根目录激活 <code>.venv</code> 后运行</td></tr><tr><td style="text-align:left">未确认上报目标就运行只读实验</td><td style="text-align:left">有发送计数但无状态帧</td><td style="text-align:left">先完成 task01 双向链路检查</td></tr><tr><td style="text-align:left">把 98 当作连接故障或回零成功</td><td style="text-align:left">对状态机作出错误判断</td><td style="text-align:left">按“初始待机”解释，并等待实际起立状态</td></tr><tr><td style="text-align:left">起立时同时发送轴指令</td><td style="text-align:left">站立过程被改变，可能进入移动就绪半蹲</td><td style="text-align:left">起立与保持阶段只发心跳</td></tr><tr><td style="text-align:left">多个 GUI 或脚本同时控制</td><td style="text-align:left">指令互相覆盖，停车与状态确认失效</td><td style="text-align:left">一台机器人同一时刻只保留一个控制客户端</td></tr><tr><td style="text-align:left">先做持续前进再练停车</td><td style="text-align:left">缺少停车能力就暴露在移动风险中</td><td style="text-align:left">先通过 task06 点动和停车观察</td></tr><tr><td style="text-align:left">运行 <code>legacy/task11_follow.py</code></td><td style="text-align:left">使用已退出教学与测试链路的历史实现</td><td style="text-align:left">只运行 <code>task12_follow.py</code></td></tr><tr><td style="text-align:left">把旧注释当作当前验收逻辑</td><td style="text-align:left">对程序结果产生误判</td><td style="text-align:left">以代码、终端日志和本讲义“实现说明”为准</td></tr></tbody></table>
+</section>
+<section class="view" id="view-ch1">
+<header class="chapter-head"><span class="chapter-num">01</span><h2>Lite3 真机协议与实验安全</h2></header>
+<h3>学习目标</h3>
+<ol><li>能解释 <code>lite3_common.py</code> 中简单命令与复杂命令的 UDP 封装方式。</li><li>能区分 <code>0x0901</code> 机器人状态帧和 <code>0x0902</code> 关节角帧，并识别 208/212 字节两种状态载荷。</li><li>能用状态三元组、数据帧龄、四膝角度和速度判断动作是否完成。</li><li>能执行软急停、正常停车和收尾归零，并说明三者的差异。</li><li>能逐项检查实验场地、控制源、传感器与退出条件，形成安全操作习惯。</li><li>能说明 task12 中视觉帧龄、感知看门狗、声纳帧龄和 dummy 拦截分别防御什么风险。</li></ol>
+<h3>建议学时</h3>
+<p>建议 <strong>2 学时</strong>：安全交底与协议演示 1 学时，停车/急停演练与只读链路验证 1 学时。首次真机操作前必须完成本单元。</p>
+<h3>先修知识</h3>
+<ul><li>Python 命令行、整数与字节的基本概念。</li><li>IP、端口、UDP 与网络不可达的基本概念。</li><li>二维/三维坐标、角度和速度的物理意义。</li><li>对机器人夹伤、碰撞、线缆缠绕和意外运动风险的基本认识。</li></ul>
+<h3>核心概念</h3>
+<h4>UDP 命令头</h4>
+<p><code>lite3_common.py</code> 将 UDP 载荷开头定义为三个小端无符号 32 位整数：</p>
+<table><thead><tr><th style="text-align:left">字段</th><th style="text-align:left">含义</th></tr></thead><tbody><tr><td style="text-align:left"><code>code</code></td><td style="text-align:left">命令码或上报帧码</td></tr><tr><td style="text-align:left">第二个整数</td><td style="text-align:left">简单命令中的 <code>value</code>；复杂命令中的 payload 字节长度</td></tr><tr><td style="text-align:left"><code>type</code></td><td style="text-align:left">简单命令为 0；复杂命令默认为 1</td></tr></tbody></table>
+<p><code>pack_simple()</code> 生成 12 字节载荷；<code>pack_complex()</code> 在 12 字节头后追加 payload。接收端只处理 <code>type=1</code> 的遥测帧；扬声器状态 <code>0x11050F08</code> 是 <code>type=0</code> 的特例。</p>
+<p>UDP 本身没有应用层的“已执行”回执。<code>send()</code> 的发送计数增长只表示本机完成了一次 <code>sendto()</code> 调用；动作是否执行必须看后续状态与遥测。</p>
+<h4>常用命令码</h4>
+<p>以下值均来自公共模块，仅用于认识现有实现，不表示可以脱离状态机随意组合发送。</p>
+<table><thead><tr><th style="text-align:left">命令码</th><th style="text-align:left">常量</th><th style="text-align:left">本项目用途</th></tr></thead><tbody><tr><td style="text-align:left"><code>0x21040001</code></td><td style="text-align:left"><code>CMD_HEARTBEAT</code></td><td style="text-align:left">心跳保活，默认 5 Hz</td></tr><tr><td style="text-align:left"><code>0x21010C05</code></td><td style="text-align:left"><code>CMD_HOME</code></td><td style="text-align:left">归零</td></tr><tr><td style="text-align:left"><code>0x21010202</code></td><td style="text-align:left"><code>CMD_STAND_SIT</code></td><td style="text-align:left">起立/趴下切换，由当前状态决定语义</td></tr><tr><td style="text-align:left"><code>0x21020C0E</code></td><td style="text-align:left"><code>CMD_SOFT_ESTOP</code></td><td style="text-align:left">软急停</td></tr><tr><td style="text-align:left"><code>0x21010D06</code></td><td style="text-align:left"><code>CMD_MOVE_MODE</code></td><td style="text-align:left">移动模式</td></tr><tr><td style="text-align:left"><code>0x21010D05</code></td><td style="text-align:left"><code>CMD_STAND_MODE</code></td><td style="text-align:left">站立模式常量；本课程基础流程不单独演示</td></tr><tr><td style="text-align:left"><code>0x21010300</code></td><td style="text-align:left"><code>CMD_GAIT_LOW</code></td><td style="text-align:left">平地低速步态</td></tr><tr><td style="text-align:left"><code>0x21010130</code></td><td style="text-align:left"><code>CMD_AXIS_FORWARD</code></td><td style="text-align:left">前向轴</td></tr><tr><td style="text-align:left"><code>0x21010131</code></td><td style="text-align:left"><code>CMD_AXIS_LATERAL</code></td><td style="text-align:left">侧向轴</td></tr><tr><td style="text-align:left"><code>0x21010135</code></td><td style="text-align:left"><code>CMD_AXIS_YAW</code></td><td style="text-align:left">偏航轴</td></tr><tr><td style="text-align:left"><code>0x2101030D</code></td><td style="text-align:left"><code>CMD_SPEAKER</code></td><td style="text-align:left">扬声器控制/查询</td></tr></tbody></table>
+<p>课堂统一使用低速步态。task10 虽提供其他步态选项，但不能把“界面能选”理解为“本实验已验证其安全性”。</p>
+<h4>状态帧与关节帧</h4>
+<ul><li><code>0x0901</code>：<code>RobotStateUpload</code> 结构体，代码断言其 payload 为 <strong>208 字节</strong>。部分上报帧带 4 字节 <code>98</code> 前缀，总 payload 为 <strong>212 字节</strong>；解析时跳过前缀。两种格式都支持。</li><li><code>0x0902</code>：12 个关节角，<code>double</code> 类型，payload 为 <strong>96 字节</strong>。关节原始值为弧度，日志同时换算为度。</li><li>四膝索引为 <code>[2,5,8,11]</code>，对应左前、右前、左后、右后膝关节。</li><li>状态默认接收端口为 <code>43897</code>，控制目标默认端口为 <code>43893</code>。这些是项目默认值，不是对现场网络配置的证明。</li></ul>
+<p>状态结构中的超声波为前/后两个 <code>double</code> 值。任务读取的是机器人上报的米制距离；不能把某个读数当作侧向保护，也不能假设传感器永远返回有限正数。</p>
+<h4>状态三元组与关键姿态</h4>
+<table><thead><tr><th style="text-align:left">三元组</th><th style="text-align:left">含义</th><th style="text-align:left">课堂判断</th></tr></thead><tbody><tr><td style="text-align:left"><code>(98,0,0)</code></td><td style="text-align:left">初始待机</td><td style="text-align:left">尚未首次起立；不能作为站立或归零完成证据</td></tr><tr><td style="text-align:left"><code>(1,0,0)</code></td><td style="text-align:left">趴下</td><td style="text-align:left">归零/起立流程的起点之一</td></tr><tr><td style="text-align:left"><code>(4,0,0)</code></td><td style="text-align:left">准备起立</td><td style="text-align:left">过渡态，等待</td></tr><tr><td style="text-align:left"><code>(5,0,0)</code></td><td style="text-align:left">正在起立</td><td style="text-align:left">过渡态，只发心跳</td></tr><tr><td style="text-align:left"><code>(6,0,0)</code></td><td style="text-align:left">力控站立、低速、静止</td><td style="text-align:left">task03 的稳定站立状态</td></tr><tr><td style="text-align:left"><code>(6,0,1)</code></td><td style="text-align:left">力控站立、低速、踏步/扭动</td><td style="text-align:left">可作为移动就绪姿态</td></tr><tr><td style="text-align:left"><code>(7,0,0)</code></td><td style="text-align:left">正在趴下</td><td style="text-align:left">避免重复发送趴下命令</td></tr><tr><td style="text-align:left"><code>(17,0,0)</code></td><td style="text-align:left">回零</td><td style="text-align:left">必须继续观察是否回到 <code>(1,0,0)</code></td></tr><tr><td style="text-align:left"><code>(8,0,0)</code></td><td style="text-align:left">失控保护</td><td style="text-align:left">停止实验，检查现场并报告教师</td></tr></tbody></table>
+<p>判据是组合条件：task03 稳定站立还要求四膝均值 60°～90°连续 3 s；移动就绪要求四膝均值 60°～130°；趴下辅助判据要求四膝均值大于 130°。这些阈值是项目代码中的实验判据，不是机器人额定硬件参数。</p>
+<h4>新鲜度、帧龄与“读取不会刷新数据”</h4>
+<p><code>get_state(max_age=0.5)</code> 与 <code>get_joint(max_age=0.5)</code> 只返回最新一帧，且要求帧龄严格小于指定值；<code>state_age()</code> 返回最新状态帧的原始年龄。</p>
+<p>因此：</p>
+<ul><li>多次读取旧帧不会让数据变新。</li><li><code>get_state()</code> 返回 <code>None</code> 可能表示从未收到，也可能表示已经超过 0.5 s。</li><li>task12 必须用 <code>snapshot()[&quot;state_age&quot;]</code> 更新声纳时间戳，不能把 <code>snapshot()</code> 调用时刻当作声纳采样时刻。</li><li>视觉帧使用 <code>VideoStream.latest_with_timestamp()</code> 返回的采集时间戳，不能用 GUI 每 50 ms 刷新一次的时刻冒充新帧。</li></ul>
+<h4>轴流、死区与停车</h4>
+<p>移动准备完成后，脚本以默认 30 Hz 发送前向、侧向、偏航轴。轴值范围由公共映射限制在约 ±32767；死区常量为：</p>
+<ul><li>前向：6553。</li><li>侧向：12553。</li><li>偏航：9553。</li></ul>
+<p>task06/07/08 会拒绝小于或等于前向死区的 <code>--value</code>。task12 的 <code>twist_to_axis()</code> 会将落在死区内的小非零输出抬到死区外一单位，使后退和转向能够越过固件死区；零输入仍映射为零。</p>
+<p><strong>正常停车顺序</strong>：</p>
+<ol><li>三个运动轴写入 <code>(0,0,0)</code>。</li><li>维持零值轴流，同时观察 <code>vel_body[0]</code> 等遥测。</li><li>确认速度低于实验阈值或进入收尾状态。</li><li>需要结束实验时，再趴下并按任务要求归零。</li><li>关闭客户端前再次确认没有残留按键、跟踪会话或轴流。</li></ol>
+<p>不要用“立即结束进程”代替停车。代码注释指出，轴指令停止约 250 ms 后底层可能接管，突然失去支撑。</p>
+<h4>三种“停止”不能混为一谈</h4>
+<table><thead><tr><th style="text-align:left">方式</th><th style="text-align:left">作用</th><th style="text-align:left">使用场景与限制</th></tr></thead><tbody><tr><td style="text-align:left">运动轴归零</td><td style="text-align:left">请求停止当前运动，保留控制链路</td><td style="text-align:left">正常松开按键、目标丢失、切换步态前</td></tr><tr><td style="text-align:left">软急停 <code>0x21020C0E</code></td><td style="text-align:left">发送项目定义的软急停命令</td><td style="text-align:left">异常时由安全员执行；不等于机械断电</td></tr><tr><td style="text-align:left">人工扶稳/物理急停</td><td style="text-align:left">从物理上阻止倒地、夹伤或碰撞</td><td style="text-align:left">悬挂、护架、首次动作与紧急情况</td></tr></tbody></table>
+<p>软急停命令如下，应在另一终端待命，IP 按现场配置替换：</p>
+<pre><code class="language-bash">python3 -c &quot;import lite3_common as l3,time; c=l3.Lite3Controller(&#x27;192.168.1.120&#x27;); c.start_heartbeat(5); c.send_simple(l3.CMD_SOFT_ESTOP); time.sleep(1); c.close()&quot;</code></pre>
+<p>若发生起火、冒烟、线缆破损、剧烈失控或人员受伤，优先按实验室规程切断电源并组织撤离，不依赖 UDP 命令。</p>
+<h3>教师演示步骤</h3>
+<ol><li>用 <code>pack_simple(0x21010130, 7000)</code> 展示 12 字节命令头的含义；只在投影或代码阅读中展示，不在机器人移动状态下随意发送。</li><li>运行 <code>task01_heartbeat.py --duration 5</code>，解释发送、接收、关节帧计数与 ICMP 不可达。</li><li>运行 <code>task02_state_receiver.py --duration 5 --joints</code>，对照结构体字段与日志，指出前后超声波与四膝索引。</li><li>分别展示“最新有效帧”和“过期后 <code>None</code>”的后果；可让另一终端短时停止状态上报，由教师控制，不制造摔倒风险。</li><li>在扶稳条件下演示一次 task06 点动，强调先发零轴、继续保活、再读取停车速度。</li><li>让安全员在待命终端演练软急停命令的查找与执行；首次演练优先在趴下状态进行。</li><li>演示 task10 的 Esc、窗口失焦和“停止运动”按钮，说明这些操作会停止跟踪并将运动轴归零。</li><li>演示 task12 <code>--selfcheck</code>，强调自检通过不代表真机偏航符号已经验证；偏航方向必须通过悬挂、小幅度真机试验确认。</li></ol>
+<h3>学生实操步骤</h3>
+<h4>开跑前安全清单</h4>
+<ul><li>[ ] 已明确操作员、安全员、记录员，知道“停止”口令。</li><li>[ ] 首次起立使用悬挂、护架或合格人工扶稳。</li><li>[ ] 前后至少 2 m 已清场；侧移路径额外清场并有人看护。</li><li>[ ] 地面干燥、平整，无线缆绊脚或缠绕腿部。</li><li>[ ] 默认 IP、状态端口、RTSP 地址已核对；必要时使用命令行参数覆盖。</li><li>[ ] 本机状态端口未被其他进程占用；没有第二个控制客户端。</li><li>[ ] task01 已收到状态帧；task02 已能解释当前三元组和关节数据。</li><li>[ ] 初始待机 98 下首次起立，电量高于 20%。</li><li>[ ] 软急停命令已在另一终端准备好，安全员可立即执行。</li><li>[ ] 已规划退出后的趴下/归零方式和人工扶稳安排。</li></ul>
+<h4>最小只读验证</h4>
+<pre><code class="language-bash">cd ~/lite3_lab/real_robot
+source .venv/bin/activate
+python3 task01_heartbeat.py --duration 10
+python3 task02_state_receiver.py --duration 10 --joints</code></pre>
+<p>若需指定实际参数：</p>
+<pre><code class="language-bash">python3 task01_heartbeat.py --ip 192.168.1.120 --state-port 43897 --duration 10</code></pre>
+<h4>停车与退出演练</h4>
+<ol><li>由教师决定机器人是否起立；学生先在只读状态完成口令演练。</li><li>若进入 task06，记录点动开始、forward 归零、停车后速度峰值三个时间点。</li><li>观察终端是否明确报告停稳，不以“看起来不动了”作为唯一证据。</li><li>真机 GUI 中依次测试 Esc 和窗口失焦，确认跟踪停止、方向键清空、运动轴归零。</li><li>按任务收尾流程趴下；需要归零时等待 <code>(17,0,0)</code> 后回到 <code>(1,0,0)</code>。</li><li>关闭界面前再次查看状态，确认没有进行中的过渡状态。退出 GUI 本身不会自动完成趴下和归零。</li></ol>
+<h3>task12 安全逻辑速查</h3>
+<table><thead><tr><th style="text-align:left">机制</th><th style="text-align:left">当前代码判据</th><th style="text-align:left">触发后的行为</th></tr></thead><tbody><tr><td style="text-align:left">视觉帧龄</td><td style="text-align:left">无有效时间戳、负帧龄或帧龄大于 0.2 s</td><td style="text-align:left">PID 清零、运动轴归零，提示视频帧过期/不可用</td></tr><tr><td style="text-align:left">感知链路超时</td><td style="text-align:left">距最近一次成功 tracker update 超过 0.5 s</td><td style="text-align:left"><code>STOP</code></td></tr><tr><td style="text-align:left">独立看门狗</td><td style="text-align:left">距最近一次控制循环更新超过 1.0 s；每 0.05 s 检查</td><td style="text-align:left">轴归零、退出跟踪状态（恢复手动可用）、结束跟踪会话</td></tr><tr><td style="text-align:left">目标丢失</td><td style="text-align:left">当前帧 tracker 返回 <code>None</code></td><td style="text-align:left"><strong>立即停车</strong>，不等待连续 10 帧</td></tr><tr><td style="text-align:left">地面反投影</td><td style="text-align:left">非有限坐标或前向距离不大于 0</td><td style="text-align:left">立即停车</td></tr><tr><td style="text-align:left">超声波帧龄</td><td style="text-align:left">状态原始帧龄大于 0.3 s，或读数无效/不大于 0</td><td style="text-align:left"><code>STOP</code></td></tr><tr><td style="text-align:left">视觉目标距离</td><td style="text-align:left">小于 1.0 m 进入过近；大于 1.3 m 解除过近</td><td style="text-align:left">过近只允许转向，不给前进轴</td></tr><tr><td style="text-align:left">目标过远</td><td style="text-align:left">大于 3.5 m 进入过远；小于 3.0 m 解除过远</td><td style="text-align:left"><code>STOP</code></td></tr><tr><td style="text-align:left">额外前后防撞</td><td style="text-align:left">task10 控制器对前进入口再检查前方距离，对后退检查后方距离；阈值 1.0 m</td><td style="text-align:left">相应方向轴归零；跟踪时同时将偏航轴归零</td></tr><tr><td style="text-align:left">dummy 拦截</td><td style="text-align:left">真机使用 <code>--dummy-h</code>、文件名含 dummy，或矩阵等于按当前画面尺寸生成的占位矩阵</td><td style="text-align:left">拒绝启动，不发送跟踪运动命令</td></tr></tbody></table>
+<p><code>SafetySupervisor</code> 中保留 <code>lost_confirm=10</code> 与 <code>lost_frames</code> 字段，但 <code>check()</code> 在 <code>target is None</code> 时直接返回 <code>STOP</code>；教学验收应以立即停车为准。</p>
+<h3>思考题</h3>
+<ol><li>为什么 UDP 发送计数不能作为起立、移动或归零成功的证据？</li><li>212 字节 <code>0x0901</code> payload 与 208 字节 payload 的差别在哪里，为什么不能把 98 当成命令头 code？</li><li><code>get_state()</code> 返回 <code>None</code> 有哪两种可能？应如何区分？</li><li>为什么停车后不能立刻停止轴流？正常停车与软急停的目标有何不同？</li><li>为什么左右移动没有前后超声波保护？实验场地应怎样调整？</li><li>task12 的视觉帧龄为什么使用采集时间戳，而不是 GUI 显示时间戳？</li><li>如果声纳数值一直很大但状态帧已经超过 0.3 s，跟随应继续还是停车？为什么？</li><li>为什么 PID 数值自检通过后，仍必须做真机偏航符号验证？</li></ol>
+<h3>验收标准</h3>
+<ul><li>能准确说出 UDP 命令头三个字段及简单/复杂命令的区别。</li><li>能指出 <code>0x0901</code>、<code>0x0902</code>、208/212 字节兼容逻辑和四膝索引。</li><li>能正确解释 98、<code>(6,0,0)</code>、<code>(6,0,1)</code>、<code>(17,0,0)</code> 的状态语义。</li><li>能演示 task01/task02 并区分“仅发送”“收到状态”“收到关节帧”三种结果。</li><li>能按顺序完成轴归零、轴流保活、速度观察和退出确认。</li><li>能在教师指令下找到并执行软急停命令，同时说明其不能替代物理防护。</li><li>能逐项说出侧移无测距保护、状态过期禁动、首次起立扶稳等规则。</li><li>对 task12 各安全阈值和触发动作的解释与代码一致，尤其能说明目标丢失立即停车。</li></ul>
+<h3>常见错误</h3>
+<table><thead><tr><th style="text-align:left">现象/错误</th><th style="text-align:left">可能原因</th><th style="text-align:left">处理与预防</th></tr></thead><tbody><tr><td style="text-align:left">一直显示“无状态”</td><td style="text-align:left">上报目标未配置、防火墙、状态端口占用、机器人未上报</td><td style="text-align:left">先查路由与端口，不连续发送运动命令试探</td></tr><tr><td style="text-align:left">收到 ICMP 端口不可达</td><td style="text-align:left">对端控制端口无进程监听或网络路径异常</td><td style="text-align:left">停止运动实验，核对 IP、供电和运控程序</td></tr><tr><td style="text-align:left">将 98 显示为连接错误</td><td style="text-align:left">混淆了状态 payload 字段与命令头 code</td><td style="text-align:left">按初始待机解释，等待首次起立</td></tr><tr><td style="text-align:left">起立后立刻发送轴值</td><td style="text-align:left">把站立完成与移动准备混为一谈</td><td style="text-align:left">先切移动模式、启动零轴流、再切低速步态并确认</td></tr><tr><td style="text-align:left">用旧声纳值判断安全</td><td style="text-align:left">读取调用刷新了“看起来的时间”</td><td style="text-align:left">使用原始 <code>state_age</code>，超过阈值停车</td></tr><tr><td style="text-align:left">把 task06 的“~方向正确”当作全通过</td><td style="text-align:left">task06 即使未停稳也可能返回 True</td><td style="text-align:left">教师验收必须单独核对停车日志</td></tr><tr><td style="text-align:left">认为软急停万无一失</td><td style="text-align:left">UDP 故障时命令可能无法送达</td><td style="text-align:left">保留机械/人工防护和物理断电方案</td></tr><tr><td style="text-align:left">为验证方向而快速连续换向</td><td style="text-align:left">惯性叠加、第二个控制源干扰</td><td style="text-align:left">每段后轴归零并等待，保持足够场地</td></tr><tr><td style="text-align:left">把 target 丢失阈值背成 10 帧</td><td style="text-align:left">沿用了类中保留字段</td><td style="text-align:left">以 <code>check()</code> 立即 <code>STOP</code> 的实际逻辑为准</td></tr></tbody></table>
+</section>
+<section class="view" id="view-ch2">
+<header class="chapter-head"><span class="chapter-num">02</span><h2>Lite3 基础控制实验</h2></header>
+<h3>学习目标</h3>
+<p>本单元覆盖 task01、task02、task03、task05、task06。完成后学生应能够：</p>
+<ol><li>验证 UDP 双向链路，读取状态帧、关节帧和基本遥测。</li><li>按状态机完成起立、稳定站立、趴下和归零，并给出每一步成功证据。</li><li>区分稳定站立与移动就绪，正确切换移动模式和低速步态。</li><li>完成一次短时前进点动，验证前向死区和停车效果。</li><li>根据终端日志识别“未动、方向反、未停稳、归零未确认”等不同结果。</li></ol>
+<h3>建议学时</h3>
+<p>建议 <strong>8 学时</strong>：</p>
+<table><thead><tr><th style="text-align:left">任务</th><th style="text-align:right">演示/讲解</th><th style="text-align:right">分组实操</th><th style="text-align:right">建议</th></tr></thead><tbody><tr><td style="text-align:left">task01 心跳与链路</td><td style="text-align:right">0.5</td><td style="text-align:right">0.5</td><td style="text-align:right">1</td></tr><tr><td style="text-align:left">task02 状态与关节</td><td style="text-align:right">0.5</td><td style="text-align:right">1.5</td><td style="text-align:right">2</td></tr><tr><td style="text-align:left">task03 起立到归零</td><td style="text-align:right">1</td><td style="text-align:right">2</td><td style="text-align:right">3</td></tr><tr><td style="text-align:left">task05 移动模式与低速步态</td><td style="text-align:right">0.5</td><td style="text-align:right">1</td><td style="text-align:right">1.5</td></tr><tr><td style="text-align:left">task06 点动与死区</td><td style="text-align:right">0.5</td><td style="text-align:right">1</td><td style="text-align:right">1.5</td></tr></tbody></table>
+<blockquote><p>时间按每组轮流使用一台机器人估算。首次起立与归零必须预留等待时间，不压缩安全确认。</p></blockquote>
+<h3>先修知识</h3>
+<ul><li>已完成<a href="01-课程导学.md" target="_blank" rel="noopener">01-课程导学.md</a>与<a href="02-协议与安全.md" target="_blank" rel="noopener">02-协议与安全.md</a>。</li><li>理解 UDP、状态三元组、关节角、速度、帧龄和零值轴流。</li><li>能在 WSL 中激活虚拟环境、运行脚本、查看参数帮助和使用 Ctrl-C。</li><li>掌握实验小组分工、清场、扶稳、停车和软急停流程。</li></ul>
+<h3>核心概念</h3>
+<h4>基础流程的共同结构</h4>
+<p>task03/05/06 共享以下教学结构，但细节不同：</p>
+<ol><li>建立控制器，启动 5 Hz 心跳与状态/关节接收。</li><li>确认遥测就绪，判断当前是否已经稳定站立。</li><li>需要起立时发送 <code>0x21010202</code>，等待 <code>(6,0,0)</code> 且四膝均值 60°～90°连续 3 s。</li><li>task05/06 再切 <code>0x21010D06</code> 移动模式，启动默认 30 Hz 的三轴零值流，发送 <code>0x21010300</code> 低速步态。</li><li>移动准备成功判据为 <code>basic=6</code>、<code>gait=0</code>、四膝均值 60°～130°。</li><li>执行本任务的观察或点动。</li><li>运动轴归零，维持轴流减速，再趴下；默认收尾调用 <code>ensure_home()</code>。</li></ol>
+<p><strong>这些脚本每次都从自己的启动流程重新判断姿态</strong>，不会自动继承上一个脚本的移动模式。上一个脚本已归零并趴下，是下一次真机运行最稳妥的起点。</p>
+<h4>站立与移动就绪不是同一件事</h4>
+<ul><li>task03 的“稳定站立”是 <code>(6,0,0)</code> 与四膝 60°～90°连续 3 s。</li><li>task05/06 的“移动就绪”接受 <code>basic=6</code>、<code>gait=0</code>、四膝 60°～130°；既可能是 <code>(6,0,0)</code>，也可能是 <code>(6,0,1)</code> 半蹲踏步态。</li><li>起立阶段发送轴指令会改变姿态，可能进入移动就绪半蹲。因此不能一边等待 task03 的稳定站立判据，一边试探轴值。</li></ul>
+<h4>task06 的两个独立判据</h4>
+<ul><li>方向：点动期间前向速度峰值大于 <code>0.02 m/s</code>。</li><li>停车：停车观察期间前向速度峰值小于 <code>0.02 m/s</code>。</li></ul>
+<p>代码的返回逻辑需要特别注意：</p>
+<ul><li>点动期间没有状态样本时，方向判据失败。</li><li>停车期间没有状态样本时，<code>vel_after_peak is None</code> 也被代码当作停稳。</li><li>停车判据使用有符号的 <code>max(vel_samples)</code>，不是绝对峰值；大幅负速度不能被这个条件排除。</li><li>当方向正确但停车未停稳时，函数仍可能返回 <code>True</code>，终端结论为“~方向正确，但停车后未完全停稳”。</li></ul>
+<p>因此，<strong>学生验收不得只看进程退出码或“全流程成功”字样</strong>，必须查看方向、停车和归零三段日志。</p>
+<h3>教师演示步骤</h3>
+<ol><li>在趴下状态运行 task01，先展示发送与状态接收，再运行 task02 展示关节明细。</li><li>讲解 98 初始待机与 <code>(6,0,0)</code> 的区别，强调状态数据是动作确认的依据。</li><li>在悬挂/护架下运行 task03，逐阶段指出日志中的“起立成功”“保持结束”“趴下”“观察到 17”“回到 1”。</li><li>说明 task03 当前实现没有独立的“启动前归零”步骤，尽管 <code>--no-home</code> 的帮助文本使用过时措辞；它只跳过收尾归零。</li><li>运行 task05，让学生观察切移动模式后姿态从站立变为允许的半蹲就绪态，而 forward 始终为零。</li><li>运行 task06 的一次短点动，记录 forward 从 0 到 7000、再回 0 的时间线和速度变化。</li><li>用参数拒绝演示死区：在趴下状态运行 <code>task06_axis_tap.py --value 6553</code>，程序应在建立运动流程前拒绝；不要用低于死区的大时长试探。</li><li>展示一次“有方向、未停稳”的日志判读方式，提醒学生不能把部分成功当作全部通过。</li></ol>
+<h3>学生实操步骤</h3>
+<h4>task01：心跳保活与双向链路</h4>
+<p><strong>目标</strong>：确认本机发送心跳且收到机器人状态帧，区分 UDP 发送与双向通信。</p>
+<p><strong>教师演示要点</strong></p>
+<pre><code class="language-bash">python3 task01_heartbeat.py --duration 10</code></pre>
+<p>指出日志中的发送心跳、接收状态、关节帧和状态三元组。默认监听 43897，默认心跳 5 Hz。</p>
+<p><strong>学生操作</strong></p>
+<ol><li>趴下状态清场，核对 IP 与状态端口。</li><li>运行上述命令并等待结束。</li><li>记录 10 s 内发送、状态、关节帧数量，以及最终状态、电量和前向速度。</li><li>如果无关节帧，仍可继续只读状态学习，但 task03 的四膝辅助判据会受影响。</li></ol>
+<p><strong>验收标准</strong></p>
+<ul><li>无 ICMP 端口不可达。</li><li><code>rx_count &gt; 0</code>，终端报告双向链路通过。</li><li>学生能解释“状态帧持续增长”和“仅发送计数增长”的差别。</li><li>关节帧为 0 时，记录为告警而不是隐瞒。</li></ul>
+<p><strong>常见错误</strong></p>
+<ul><li>使用 <code>--state-port 0</code> 后期待双向确认：该模式只统计发送。</li><li>将最后一次显示的状态当作实时状态：应同时记录帧龄或持续计数。</li><li>在状态不通时继续起立：先修复链路。</li></ul>
+<h4>task02：状态帧与关节帧只读观测</h4>
+<p><strong>目标</strong>：读取 <code>0x0901/0x0902</code>，将字段与状态机动作对应。</p>
+<p><strong>教师演示要点</strong></p>
+<pre><code class="language-bash">python3 task02_state_receiver.py --duration 10 --joints --interval 1</code></pre>
+<p>本任务会发送 5 Hz 心跳，但不发送任何运动命令，机器人保持当前姿态。</p>
+<p><strong>学生操作</strong></p>
+<ol><li>运行命令，记录至少 3 组不同时间的三元组。</li><li>找到四个带 <code>*</code> 的膝关节，核对其索引为 2、5、8、11。</li><li>记录前/后超声波、前后速度、侧向速度、偏航角速度和四膝均值。</li><li>根据最终状态说明下一步：趴下可准备起立；稳定站立可进入 task03；过渡态应等待。</li><li>Ctrl-C 退出，确认机器人没有运动。</li></ol>
+<p><strong>验收标准</strong></p>
+<ul><li>状态帧与关节帧均持续接收，能正确换算 rad/deg。</li><li>三元组解释正确，尤其不会把 98 当作故障或站立完成。</li><li>记录中包含至少一个超声波值和四膝均值。</li><li>明确说明本任务“只读运动状态”，但仍有心跳发送。</li></ul>
+<p><strong>常见错误</strong></p>
+<ul><li>关节值为 <code>?</code> 仍继续 task03：task03 需要 <code>0x0902</code>，先排查。</li><li>将超声波两值理解为左右距离：它们是前/后距离。</li><li>反复按键或发送姿态命令来“刷新观测”：只读任务不需要运动指令。</li></ul>
+<h4>task03：起立、力控站立、趴下与归零</h4>
+<p><strong>目标</strong>：理解 <code>趴下 → 起立过渡 → 稳定站立 → 保持 → 趴下 → 回零 → 趴下</code> 状态链。</p>
+<p><strong>教师演示要点</strong></p>
+<pre><code class="language-bash">python3 task03_stand_to_force.py --hold 10</code></pre>
+<p>首次演示保持默认 10 s。<code>--hold 0</code> 表示一直保持，直到 Ctrl-C；不要在课堂中超时无人看管。</p>
+<p><strong>学生操作</strong></p>
+<ol><li>悬挂或护架扶稳，确认状态/关节帧就绪。若已在 <code>(6,0,0)</code> 且四膝 60°～90°，脚本会跳过起立。</li><li>运行命令，观察阶段 A。起立期间只应有心跳，无轴指令。</li><li>起立成功必须同时看到 <code>(6,0,0)</code> 和四膝均值 60°～90°连续 3 s。若启动时已经满足单次稳定判据，脚本会直接跳过起立，不重新执行 3 s 等待；应在阶段 B 的保持日志中补足连续稳定证据。</li><li>阶段 B 每秒观察状态与四膝；记录保持期间是否出现 <code>⚠</code>。</li><li>阶段 C 先稳定趴下，再发 <code>0x21010C05</code>；记录是否观察到 <code>(17,0,0)</code>，是否随后回到 <code>(1,0,0)</code>。</li><li>收尾后人工确认机器人稳定趴下、腿部无线缆缠绕，再解除扶稳。</li></ol>
+<p><strong>验收标准</strong></p>
+<ul><li>终端明确报告起立成功，而不是只发送了 <code>0x21010202</code>。</li><li>保持结束仍在稳定站立判据内，或能说明干扰来源。</li><li>默认流程观察到 <code>(17,0,0)</code> 后回到 <code>(1,0,0)</code>。</li><li>归零前后四膝读数只作为编码器置零后的记录，不要求两者相同。</li><li><code>--no-home</code> 实验必须明确标注“未收尾归零”，不能记为完整归零成功。</li></ul>
+<p><strong>常见错误</strong></p>
+<ul><li>在非趴下、非稳定站立状态强行使用 <code>--force</code>：可能发出不符合当前状态机预期的切换命令，必须由教师决定。</li><li>将“四膝大于 130°”当作归零完成：必须看到 17 再回到 1。</li><li>连续按 Ctrl-C：首次中断进入收尾，再次中断可能使机器人停在中间态，应立即人工扶稳并报告。</li><li>看到 <code>(7,0,0)</code> 还重复发趴下命令：应等待自然稳定，公共 <code>ensure_sit()</code> 已考虑过渡态。</li><li>把 <code>--no-home</code> 理解为启动前也不归零：该参数只控制收尾；当前主流程没有独立启动前归零。</li></ul>
+<h4>task05：移动模式与低速步态</h4>
+<p><strong>目标</strong>：在<strong>不前进</strong>的前提下完成移动模式与低速步态准备。</p>
+<p><strong>教师演示要点</strong></p>
+<pre><code class="language-bash">python3 task05_move_mode_low_gait.py --hold 10 --hold-hz 30</code></pre>
+<p><code>--hold-hz</code> 低于 20 会被拒绝。阶段 B 先发移动模式，再启动三轴零值流，最后发低速步态。</p>
+<p><strong>学生操作</strong></p>
+<ol><li>从稳定趴下开始，确认场地和扶稳条件。</li><li>运行命令，记录起立成功和切步态成功两条日志。</li><li>核对整个保持阶段 <code>forward=0</code>，机器人不应发生前进位移。</li><li>记录移动就绪时的状态三元组和四膝均值，允许 <code>(6,0,0)</code> 或 <code>(6,0,1)</code>。</li><li>收尾观察 forward 归零、轴流停止、趴下与归零。</li><li>若阶段 B 失败，记录当前 gait，不绕过检查进入 task06。</li></ol>
+<p><strong>验收标准</strong></p>
+<ul><li><code>gait_state=0</code>，四膝均值在 60°～130°。</li><li>保持阶段三轴中的 forward 始终为零，无点动或位移指令。</li><li>轴流频率达到或超过 20 Hz；课堂默认使用 30 Hz。</li><li>默认收尾完成趴下与归零确认。</li><li>能解释 77.5° 附近的站立与 121.4° 附近的半蹲就绪都可能在代码允许范围内，而不把某个实测值当作通用硬件参数。</li></ul>
+<p><strong>常见错误</strong></p>
+<ul><li>在 AI 状态 <code>basic=16</code> 期待普通步态切换生效：先恢复非 AI 状态。</li><li>认为 <code>gait=0</code> 单独就代表可移动：还需 <code>basic=6</code>、四膝范围和有效遥测。</li><li>把 task05 当作移动实验：它只做准备，forward 一直为零。</li><li>保持阶段无人看管：脚本可能正在保持半蹲或等待收尾。</li></ul>
+<h4>task06：前进点动与死区验证</h4>
+<p><strong>目标</strong>：用短脉冲验证前向轴方向、前向死区和零值停车。</p>
+<p><strong>教师演示要点</strong></p>
+<pre><code class="language-bash">python3 task06_axis_tap.py --value 7000 --duration 0.8 --cooldown 2</code></pre>
+<p>参数检查要求 <code>value &gt; 6553</code>、<code>hold_hz &gt;= 20</code>；<code>duration &gt; 2</code> 仅给出偏长警告。第一次真机点动应保留默认短时长。</p>
+<p><strong>学生操作</strong></p>
+<ol><li>确认前方至少 1 m 无障碍，机器人由安全员扶稳或护架限制。</li><li>运行默认参数一次，记录点动前基线、点动期速度峰值/均值、停车后速度峰值。</li><li>确认点动期 <code>vel_body[0] &gt; 0.02 m/s</code>，即机器人向前。</li><li>确认 forward 已回零且停车后速度低于 <code>0.02 m/s</code>；若停车样本缺失或出现异常负速度，不能据代码返回值直接判通过。</li><li>观察收尾是否稳定趴下并归零。</li><li>如需第二次，只改变一个参数，例如将 <code>duration</code> 从 0.8 增至 1.0；不要同时增大轴值和时长。</li><li>比较 <code>pos_world[0]</code> 的变化，但注明它是 IMU 积分参考，不是卷尺测量。</li></ol>
+<p><strong>验收标准</strong></p>
+<ul><li>点动期前向速度峰值大于 <code>0.02 m/s</code>，方向为正。</li><li>停车观察有有效状态样本，速度绝对值在教师规定观察窗口内低于 <code>0.02 m/s</code>。</li><li>日志明确报告“方向正确 + 已停稳”；仅“~方向正确”不算完整通过。</li><li>收尾完成趴下与归零，或明确记录 <code>--no-home</code> 的未归零状态。</li><li>能解释 <code>value &lt;= 6553</code> 被拒绝是死区保护，而不是网络故障。</li></ul>
+<p><strong>常见错误</strong></p>
+<ul><li>一开始就使用大轴值或长 duration：先完成默认点动，场地和停车能力未验证前不加码。</li><li>只检查“进程正常结束”：task06 的部分成功也可能正常结束。</li><li>停车样本为 <code>None</code> 仍记成功：应重新取得有效停车遥测。</li><li>将 task06 的有符号停车峰值当作绝对速度：人工核对日志和实际运动。</li><li>点动后立即停止轴流：应保持零轴流减速。</li><li>用很大的世界位移差代替速度判据：位置可能漂移，仅作参考。</li></ul>
+<h3>思考题</h3>
+<ol><li>task01 的 tx/rx/joint 三类计数分别证明什么？</li><li>task02 不发运动命令但发心跳，是否仍可能影响机器人？为什么课堂仍将其归为只读任务？</li><li>为什么 task03 要求 <code>(6,0,0)</code> 和四膝角度同时满足，而 task05 接受更宽的 60°～130°？</li><li>task05 的三轴零值流与 task03 的“只发心跳”有何目的差异？</li><li>task06 的方向判据和停车判据为什么必须分开记录？</li><li>为什么 <code>vel_after_peak=None</code> 或返回 True 都不能替代教师对停车日志的检查？</li><li>归零前后四膝读数为何可能不同？真正的归零成功证据是什么？</li><li>如果每次都在 task05 阶段 B 失败，应检查哪些状态和端口，而不是直接增大轴值？</li></ol>
+<h3>验收标准</h3>
+<table><thead><tr><th style="text-align:left">任务</th><th style="text-align:left">必需证据</th><th style="text-align:left">通过条件</th></tr></thead><tbody><tr><td style="text-align:left">task01</td><td style="text-align:left">终端统计与结论</td><td style="text-align:left">有状态帧、无 ICMP 不可达，双向链路通过</td></tr><tr><td style="text-align:left">task02</td><td style="text-align:left">三元组、关节/四膝、超声波记录</td><td style="text-align:left">状态与关节解析正常，字段解释正确</td></tr><tr><td style="text-align:left">task03</td><td style="text-align:left">起立、保持、趴下、17→1 日志</td><td style="text-align:left">起立判据连续 3 s 满足，归零状态序列完整</td></tr><tr><td style="text-align:left">task05</td><td style="text-align:left">gait、四膝、零 forward、收尾日志</td><td style="text-align:left">移动准备就绪且全程不前进，收尾安全</td></tr><tr><td style="text-align:left">task06</td><td style="text-align:left">点动速度、停车速度、收尾日志</td><td style="text-align:left">方向正确，有有效停车样本且停稳，收尾完成</td></tr></tbody></table>
+<p>单元总评还需考察：规范使用命令行、如实记录异常、按口令停车、退出后确认姿态。任一安全项缺失，不因技术指标合格而自动通过。</p>
+<h3>常见错误汇总</h3>
+<table><thead><tr><th style="text-align:left">错误/现象</th><th style="text-align:left">判断线索</th><th style="text-align:left">正确处理</th></tr></thead><tbody><tr><td style="text-align:left">有发送无接收</td><td style="text-align:left">tx 增长、rx=0</td><td style="text-align:left">检查上报目标、43897 占用和防火墙</td></tr><tr><td style="text-align:left">98 后直接判故障</td><td style="text-align:left">三元组首项为 98</td><td style="text-align:left">按初始待机处理，电量高于 20% 才首次起立</td></tr><tr><td style="text-align:left">task03 等待超时</td><td style="text-align:left">无四膝、非 <code>(6,0,0)</code>、外力阻挡</td><td style="text-align:left">先查链路与姿态，不盲目重发或加轴</td></tr><tr><td style="text-align:left">task05 切步态失败</td><td style="text-align:left">basic=16 或 gait 非 0</td><td style="text-align:left">确认非 AI 移动模式，重新按流程准备</td></tr><tr><td style="text-align:left">task06 未动</td><td style="text-align:left">峰值不大于 0.02、轴值在死区、未就绪</td><td style="text-align:left">核对模式、死区、状态和场地</td></tr><tr><td style="text-align:left">task06 方向为负</td><td style="text-align:left">点动期速度显著为负</td><td style="text-align:left">停止实验，检查其他控制源与方向约定</td></tr><tr><td style="text-align:left">task06 未停稳</td><td style="text-align:left">停车日志仍有较大速度</td><td style="text-align:left">增大观察时间、保持零轴流、排查指令残留</td></tr><tr><td style="text-align:left">归零未确认</td><td style="text-align:left">未见 17 或 17 后未回 1</td><td style="text-align:left">记为失败，检查发送前状态和其他 UDP 客户端</td></tr><tr><td style="text-align:left">收尾后仍站立</td><td style="text-align:left">Ctrl-C 被打断或流程提前返回</td><td style="text-align:left">人工扶稳，按教师指导完成趴下/归零</td></tr></tbody></table>
+</section>
+<section class="view" id="view-ch3">
+<header class="chapter-head"><span class="chapter-num">03</span><h2>Lite3 综合控制实验</h2></header>
+<h3>学习目标</h3>
+<p>本单元覆盖 task07、task08、task09、task10。完成后学生应能够：</p>
+<ol><li>执行持续前进，观察速度与位置，并确认停车窗口内真正停稳。</li><li>理解 task08 的前后超声波保护：近障或数据无效时停止前进轴，但不自动绕障。</li><li>验证前进、后退、左移、右移的轴值与身体速度符号。</li><li>使用 task10 完成键盘移动、姿态切换、低速步态、回零和状态观测。</li><li>解释 task10 的前后防撞、侧移风险、状态门控以及 Esc/失焦停车。</li><li>准确说明 task09 当前没有发送偏航转向轴，不能把“四向移动”误认为“已学会转向”。</li></ol>
+<h3>建议学时</h3>
+<p>建议 <strong>4 学时</strong>：task07/task08 联合演示与学生实操 2 学时，task09 符号验证 1 学时，task10 界面与安全复盘 1 学时。每项运动均需分组轮换，不安排同时操作同一机器人。</p>
+<h3>先修知识</h3>
+<ul><li>已通过 task01/task02 的链路与只读观测验收。</li><li>已完成 task03 起立/趴下/归零和 task05 移动准备。</li><li>已通过 task06 点动，能够独立判断方向与停车。</li><li>理解前向/侧向/偏航三个轴、死区、零值轴流和状态新鲜度。</li><li>能使用 Tkinter 图形界面，理解按住/松开按键与窗口焦点。</li></ul>
+<h3>核心概念</h3>
+<h4>持续前进与停车窗口</h4>
+<p>task07 默认 <code>forward=9000</code>、运动 3 s、停车观察 3 s，轴流默认 30 Hz。安全停车函数接收 <code>--cooldown</code>，在观察窗口内寻找 <code>abs(vel_body[0]) &lt; 0.02 m/s</code>；只有方向和停车都确认才返回成功。</p>
+<p>task07 启动门控与基础任务不同：</p>
+<ul><li>当前为 <code>(1,0,0)</code> 或 98 时允许继续进入自身起立流程。</li><li>当前为其他状态时，先调用 <code>ensure_home()</code>；必须确认归零并回到 <code>(1,0,0)</code> 才继续，否则停止任务。</li></ul>
+<p>这是“未知/移动中间状态不得直接起步”的保护，不应通过关闭状态监听绕过。</p>
+<h4>超声波保护不是自动导航</h4>
+<div class="diagram-scroll"><figure class="diagram"><svg viewBox="0 0 880 430" role="img" aria-labelledby="r-guard-title"><title id="r-guard-title">task08 与 task09 的安全边界对比</title><g font-family="Helvetica,Arial,sans-serif"><rect x="34" y="38" width="360" height="280" rx="18" style="fill:var(--paper);stroke:var(--line)"/><rect x="486" y="38" width="360" height="280" rx="18" style="fill:var(--accent-soft);stroke:var(--accent)"/><text x="214" y="82" text-anchor="middle" font-size="25" style="fill:var(--ink)">task08</text><text x="214" y="122" text-anchor="middle" font-size="18" style="fill:var(--ink-soft)">近障 / 无效 / 状态过期</text><text x="214" y="174" text-anchor="middle" font-size="30" style="fill:var(--accent-deep)">forward = 0</text><text x="214" y="220" text-anchor="middle" font-size="18" style="fill:var(--ink-soft)">安全后按条件恢复</text><text x="214" y="270" text-anchor="middle" font-size="17" style="fill:var(--ink)">只保护前后，不自动绕障</text><text x="666" y="82" text-anchor="middle" font-size="25" style="fill:var(--ink)">task09</text><text x="666" y="122" text-anchor="middle" font-size="18" style="fill:var(--ink-soft)">状态帧丢失</text><text x="666" y="174" text-anchor="middle" font-size="30" style="fill:var(--accent-deep)">人工立即停止</text><text x="666" y="220" text-anchor="middle" font-size="18" style="fill:var(--ink-soft)">当前方向循环不自动归零</text><text x="666" y="270" text-anchor="middle" font-size="17" style="fill:var(--ink)">只做四向平移，不含偏航</text><text x="440" y="166" text-anchor="middle" font-size="42" style="fill:var(--accent)">≠</text><line x1="90" y1="350" x2="790" y2="350" style="stroke:var(--line)"/><text x="440" y="390" text-anchor="middle" font-size="18" style="fill:var(--ink-soft)">保护范围不同：不能把 task09 当作安全避障或转向验证。</text></g></svg><figcaption>安全行为取决于具体任务的状态门控，不能从一个任务的保护能力推导另一个任务。</figcaption></figure></div>
+<p>task08 在每个控制循环读取前/后声纳：</p>
+<ul><li>前或后距离小于 1.0 m：forward 轴归零，保持原地运动。</li><li>任一距离不是有限数：也按阻塞处理。</li><li><code>get_state()</code> 返回 <code>None</code>：forward 轴归零，并提示状态未知。</li><li>两侧均恢复到不小于 1.0 m：继续发送原 forward 轴值。</li><li>避障/阻塞时间仍计入 <code>duration</code>，不会暂停计时延长总时长。</li></ul>
+<p>它<strong>不会绕行、不会侧移、不会倒车，也不会自动退出任务</strong>。这里的“原地运动”是继续发送零轴流并保持步态，不应理解为位置绝对不变。</p>
+<p><code>task08</code> 还有两个必须如实讲授的实现细节：</p>
+<ol><li><code>--cooldown</code> 参数虽然存在，但当前调用没有把它传给 <code>_safe_stop()</code>；安全停车函数内部硬编码观察上限 <strong>5.0 s</strong>。</li><li>当检测到过障且已停稳时，即使没有采集到正向速度样本，也可能返回避障成功；若方向正确但未停稳，当前代码仍可能返回 <code>True</code>。验收必须单独核对停车日志。</li></ol>
+<h4>四向轴值与坐标</h4>
+<p>task09 使用固定轴值：</p>
+<table><thead><tr><th style="text-align:left">动作</th><th style="text-align:right">forward</th><th style="text-align:right">lateral</th><th style="text-align:left">预期身体速度</th></tr></thead><tbody><tr><td style="text-align:left">前进</td><td style="text-align:right">+12000</td><td style="text-align:right">0</td><td style="text-align:left"><code>vel_body[0]</code> 为正</td></tr><tr><td style="text-align:left">后退</td><td style="text-align:right">-12000</td><td style="text-align:right">0</td><td style="text-align:left"><code>vel_body[0]</code> 为负</td></tr><tr><td style="text-align:left">左移</td><td style="text-align:right">0</td><td style="text-align:right">-16000</td><td style="text-align:left"><code>vel_body[1]</code> 为负</td></tr><tr><td style="text-align:left">右移</td><td style="text-align:right">0</td><td style="text-align:right">+16000</td><td style="text-align:left"><code>vel_body[1]</code> 为正</td></tr></tbody></table>
+<p>每段运动 3 s，随后 forward/lateral 归零并保持轴流 2 s。yaw 始终为 0。</p>
+<p><strong>task09 文件名中的 directions 指四向平移；当前实现不验证偏航转向符号。</strong> 真正的偏航输出在 task12 中，需要通过悬挂、小幅度、短时真机试验单独确认。</p>
+<h4>task10 的控制架构</h4>
+<ul><li><code>task10_gui.py</code>：Tkinter 界面、按键绑定、RTSP 显示、状态刷新。</li><li><code>task10_robot.py</code>：UDP 控制、姿态状态机、30 Hz 三轴流、手动/跟踪互斥和前后防撞。</li><li><code>task10_video.py</code>：后台读取 RTSP，断流后每 2 s 尝试重连。</li><li>task10 界面中的“开始跟踪（T）”会加载 <code>FollowSession</code>，即使用户运行的是 task10 入口，跟踪功能仍来自 task12。</li></ul>
+<p>GUI 的状态刷新周期为 50 ms，但状态数据仍受公共 <code>get_state()</code> 的 0.5 s 新鲜度限制；界面看起来在刷新，不代表机器人数据也新鲜。</p>
+<h3>教师演示步骤</h3>
+<ol><li>在稳定趴下状态运行 task07 默认参数，逐段解释启动门控、起立、移动准备、前进、停车和收尾。</li><li>重点展示停车日志：<code>forward 归 0</code> 后仍需轴流保活，看到 <code>abs(vel)&lt;0.02</code> 才记录停稳时刻。</li><li>演示 task08：在开始前布置一个不会接触机器人、但能使前或后距离小于 1.0 m 的固定障碍物；不要让人手持障碍物站在机器人路径上。</li><li>展示 task08 从“前进”切换为“原地运动”，再安全移开固定障碍物后恢复；提醒阻塞时计时继续。</li><li>运行 task09，逐段让学生根据轴值和 <code>vel_body</code> 判断方向；明确指出四段中 yaw 都是 0。</li><li>启动 task10，先只读观察，再依次演示空格起立/准备移动模式、按住方向键、松开、Esc、失焦和停止按钮。</li><li>演示“趴下时方向键禁用”和“状态帧过期时清空按键”，不通过拔线方式制造突然失速。</li><li>演示回零按钮只允许在 <code>(1,0,0)</code> 或 98 启动，并等待 17→1；站立状态需先按空格趴下。</li><li>演示关闭窗口：先退出跟踪、停止运动、视频关闭、控制器关闭；强调关闭 GUI 不等于自动趴下归零。</li></ol>
+<h3>学生实操步骤</h3>
+<h4>task07：持续前进与停车观察</h4>
+<p><strong>目标</strong>：从零轴流切换到持续前进，再恢复零轴流并确认停稳。</p>
+<p><strong>学生操作</strong></p>
+<pre><code class="language-bash">python3 task07_axis_stream_forward.py --duration 3 --cooldown 3</code></pre>
+<ol><li>前后至少 2 m 清场，护架或安全员扶稳；确认没有第二个控制源。</li><li>运行命令。若启动时不是趴下或 98，观察自动归零门控是否成功；归零失败则停止，不绕过。</li><li>记录前进期 <code>vel_body[0]</code> 峰值、均值、位置起止值和状态三元组。</li><li>停车阶段记录 forward 归零时间、停稳时间和停车后速度。</li><li>若未停稳，保持现场安全并记录失败；不要立即再次运行。</li><li>收尾确认趴下、观察到 17、回到 1。</li></ol>
+<p><strong>验收标准</strong></p>
+<ul><li>前进期速度峰值大于 <code>0.02 m/s</code>，方向为正。</li><li><code>--cooldown</code> 为大于 0 的值，停车窗口内实际观察到 <code>abs(vel)&lt;0.02</code>。</li><li>终端报告“方向正确 + 已停稳”，不只是“前进完成”。</li><li>收尾完成，机器人最终稳定趴下。</li><li>位置差仅作为 IMU 积分参考，不宣称是精密测量。</li></ul>
+<p><strong>常见错误</strong></p>
+<ul><li>将 <code>--duration 0</code> 当作“很快结束”：它表示一直前进到 Ctrl-C，只适合教师演示。</li><li>只延长 duration 不检查场地：默认注释中的距离估计不是任何现场的安全保证。</li><li><code>--state-port 0</code>：task07 明确拒绝，因为启动门控需要状态。</li><li>Ctrl-C 后马上松开扶稳：应等待零轴停车和收尾完成。</li></ul>
+<h4>task08：超声波保护前进</h4>
+<p><strong>目标</strong>：验证前后近障、无效数据和状态缺失时 forward 被拦截，理解恢复条件。</p>
+<p><strong>学生操作</strong></p>
+<pre><code class="language-bash">python3 task08_ultrasonic_guard_forward.py --duration 5</code></pre>
+<ol><li>先在 task02 中读取前/后基线，确认两侧读数有限且场地安全。</li><li>若演示避障，在运动开始前将一个固定障碍物放入声纳可检测区域，使前或后距离小于 1.0 m，并保证机器人不会接触到它。</li><li>运行任务，记录“前进/原地运动”的模式切换、距离和 forward 行为。</li><li>需要演示恢复时，先按教师口令停止运动，再由安全员在机器人稳定后移开障碍物；不要在机器人仍运动时进入路径。</li><li>单次演示也可从“已阻塞”开始，观察原定时长结束后停稳；这种情况不要求产生前进速度峰值。</li><li>记录终端实际停车观察时间，认识内部 5 s 上限与 <code>--cooldown</code> 参数未接入的差异。</li></ol>
+<p><strong>验收标准</strong></p>
+<ul><li>任一侧小于 1.0 m 或数据无效时，日志报告告警，forward 轴归零。</li><li>两侧安全且状态有效时，日志显示恢复前进。</li><li>状态帧缺失时，forward 轴归零，不继续盲目前进。</li><li>最终有有效停车观察，机器人停止运动并完成收尾。</li><li>学生明确说出“没有自动绕障/侧移/倒车”，且总运行时间不因阻塞暂停。</li></ul>
+<p><strong>常见错误</strong></p>
+<ul><li>用真人测试碰撞或不断靠近机器人：使用固定障碍物，人员不得进入运动路径。</li><li>把“原地运动”理解为姿态完全锁定：它仍维持步态，可能有轻微身体运动。</li><li>把 task08 当作侧向避障：左右方向不受本任务保护。</li><li>修改 <code>--cooldown</code> 后期待停车窗口改变：当前安全停车内部固定为 5 s。</li><li>看到“~方向正确”就当停稳：仍需人工核对停车速度。</li></ul>
+<h4>task09：前后左右方向与符号</h4>
+<p><strong>目标</strong>：验证四个平移方向的轴符号和身体速度符号。</p>
+<p><strong>学生操作</strong></p>
+<pre><code class="language-bash">python3 task09_axis_directions.py</code></pre>
+<ol><li>扩大前后左右净空，重点确认左右没有超声波防护。</li><li>从稳定趴下开始；task09 没有 task07 那样的启动归零门控，教师应提前完成状态确认。</li><li>运行固定序列，逐段记录 <code>vel_body=(vx,vy)</code> 与 <code>pos_world=(x,y)</code>。</li><li>每段 3 s 后确认 forward/lateral 已归零，且程序继续发送 2 s 零轴流。</li><li>若状态帧在运动中丢失，代码的 <code>_run_direction()</code> 只是跳过打印，<strong>不会自动把当前轴归零</strong>；应立即由安全员 Ctrl-C 或按实验室停止规程处理。</li><li>收尾确认趴下与归零。</li></ol>
+<p><strong>验收标准</strong></p>
+<ul><li>前进 <code>vx&gt;0</code>、后退 <code>vx&lt;0</code>、左移 <code>vy&lt;0</code>、右移 <code>vy&gt;0</code>，与代码轴值一致。</li><li>每段之间有明确的零轴停顿，无连续反向叠加。</li><li>能指出 yaw 始终为 0，未完成转向验证。</li><li>收尾完成；若方向不符，记录异常并停止，不在现场随意改轴值重试。</li></ul>
+<p><strong>常见错误</strong></p>
+<ul><li>只观察机器人朝向：应看身体速度与位置符号。</li><li>认为 task09 包含左转/右转：当前没有 yaw 指令。</li><li>状态丢失仍等待 3 s 结束：当前方向函数不会因缺状态自动归零，应立即安全停止。</li><li>侧移时只看前后距离：侧方必须人工清场。</li></ul>
+<h4>task10：键盘、视频、状态与控制面板</h4>
+<p><strong>目标</strong>：在图形界面中完成受门控保护的手动低速控制。</p>
+<p><strong>学生操作</strong></p>
+<pre><code class="language-bash">python3 task10_gui.py</code></pre>
+<ol><li>确认 RTSP 地址可访问、状态端口有效；本入口要求 <code>--state-port &gt; 0</code>。</li><li>启动后观察状态、姿态、前后距离、身体速度和防撞提示。视频断流时界面显示错误并自动重连，但状态控制是另一条链路。</li><li>首次在趴下状态按 Space：程序起立并自动准备移动模式、启动零轴流、切低速步态，等待“站立就绪”。</li><li>按住方向键移动，松开立即将对应轴清零。可测试相反方向同时按下时，其差值计算会抵消该轴；课堂按一次一个方向练习。</li><li>演示前方近障只拦截前进、后方近障只拦截后退；不要用真人做移动障碍。</li><li>按 T 启动/停止 task12 跟踪；首次启动需要 YOLO 权重和标定文件。跟踪时方向键被禁用，先按 T 或停止按钮退出。</li><li>测试 Esc、窗口失焦和“停止运动”按钮，确认运动轴归零且跟踪停止。</li><li>需要趴下时按 Space；在 <code>(1,0,0)</code> 使用“回零”并等待 17→1。98 状态也允许回零按钮发送命令，但仍须观察状态序列。</li><li>关闭窗口前按 Space 趴下并完成所需归零。正常关闭会停运动、关视频和 UDP，但不会替你执行趴下/归零。</li></ol>
+<p><strong>验收标准</strong></p>
+<ul><li>未就绪、趴下、姿态未确认或状态过期时，方向键不能产生有效运动。</li><li>前进受前方 1.0 m 阈值保护，后退受后方 1.0 m 阈值保护；左右侧移无测距拦截。</li><li>松开方向键、Esc、失焦、停止按钮均能停止运动并清空按键状态。</li><li>跟踪与手动互斥，停止跟踪后恢复手动可用状态。</li><li>能完成起立、低速移动、趴下和回零，并读懂界面状态。</li><li>默认只使用平地低速步态；其他步态选项只作代码认识，不在本实训中自行提速。</li></ul>
+<p><strong>常见错误</strong></p>
+<ul><li>在跟踪中按方向键：手动输入会被拒绝；先退出跟踪。</li><li>视频有画面就以为控制可用：控制依赖状态帧与姿态门控，不依赖视频。</li><li>左右移动不报警就以为安全：那是无侧向测距保护，必须人工确认。</li><li>站立状态直接点回零：会被拒绝，先按 Space 趴下。</li><li>关闭窗口代替收尾：关闭只停止/释放资源，不自动完成姿态归零。</li><li>把 task10 当作无机器人离线模拟：现行 task10 入口是真机控制；脱机视觉验证使用 task12 <code>--offline</code>。</li></ul>
+<h3>思考题</h3>
+<ol><li>task07 的 <code>--cooldown</code> 如何影响停车判定？为什么不能把“计时结束”当作“已停稳”？</li><li>task08 为什么在声纳无效时也停止前进轴？失效安全与正常运行有何区别？</li><li>task08 的避障是否构成路径规划？它有哪些不能完成的行为？</li><li>task09 四个动作的 forward/lateral 符号是什么？为什么 yaw=0 意味着没有验证转向？</li><li>task09 在状态帧丢失时继续当前轴值，与 task08 状态丢失时 forward 归零，有何差异？操作员应如何应对？</li><li>task10 的前后防撞为什么不能保护侧移？若同时按前进与右移会发生什么？</li><li>为什么 Esc 和窗口失焦需要同时停止跟踪与运动，而不能只清方向键？</li><li>task10 回零按钮与公共 <code>ensure_home()</code> 的起点确认有何异同？为什么要等待 17 再等待 1？</li></ol>
+<h3>验收标准</h3>
+<table><thead><tr><th style="text-align:left">任务</th><th style="text-align:left">量化/行为要求</th><th style="text-align:left">必需安全证据</th></tr></thead><tbody><tr><td style="text-align:left">task07</td><td style="text-align:left">默认 3 s 前进；点动峰值大于 0.02 m/s；cooldown 内 <code>abs(vel)&lt;0.02</code></td><td style="text-align:left">启动门控通过，收尾归零完成</td></tr><tr><td style="text-align:left">task08</td><td style="text-align:left">近障/无效/缺状态时 forward=0；安全时恢复；阻塞计时继续</td><td style="text-align:left">固定障碍演示，无人员进入路径，停车日志有效</td></tr><tr><td style="text-align:left">task09</td><td style="text-align:left">四个方向轴值与 <code>vel_body</code> 符号一致；每段后停 2 s</td><td style="text-align:left">四侧清场，明确未做 yaw 验证，收尾完成</td></tr><tr><td style="text-align:left">task10</td><td style="text-align:left">就绪门控、前后阈值、松键/Esc/失焦停车、姿态与回零</td><td style="text-align:left">侧移人工看护，跟踪/手动互斥，退出前姿态安全</td></tr></tbody></table>
+<p>综合实验不以“跑完脚本”作为通过条件。任一动作方向错误、停车未确认、绕过启动门控或让人员进入运动路径，均需暂停并重新讲解后再测。</p>
+<h3>常见错误汇总</h3>
+<table><thead><tr><th style="text-align:left">现象</th><th style="text-align:left">代码/操作原因</th><th style="text-align:left">排障与整改</th></tr></thead><tbody><tr><td style="text-align:left">task07 启动即停止</td><td style="text-align:left">当前状态不是 1/98，自动归零失败</td><td style="text-align:left">查看 ensure_home 日志，恢复稳定趴下后重跑</td></tr><tr><td style="text-align:left">task07 显示未停稳</td><td style="text-align:left">cooldown 不足、惯性或其他控制源</td><td style="text-align:left">保持零轴流，延长观察，排查多客户端</td></tr><tr><td style="text-align:left">task08 一直原地运动</td><td style="text-align:left">前/后小于 1 m、读数无效或状态过期</td><td style="text-align:left">停止后检查固定障碍与状态链路</td></tr><tr><td style="text-align:left">task08 修改 cooldown 无效</td><td style="text-align:left">参数未传入 <code>_safe_stop()</code></td><td style="text-align:left">认识当前 5 s 内部上限，按实际日志评价</td></tr><tr><td style="text-align:left">task09 状态丢失仍运动</td><td style="text-align:left">当前方向循环不因无状态自动归零</td><td style="text-align:left">立即安全停止，恢复链路后再试</td></tr><tr><td style="text-align:left">task09 期待原地转向</td><td style="text-align:left">yaw 轴固定为 0</td><td style="text-align:left">转至 task12 的受控偏航验证</td></tr><tr><td style="text-align:left">task10 方向键无反应</td><td style="text-align:left">趴下、未准备、过渡态或状态过期</td><td style="text-align:left">查看姿态与状态提示，先按 Space 准备</td></tr><tr><td style="text-align:left">task10 跟踪时手动失效</td><td style="text-align:left">设计为手动/跟踪互斥</td><td style="text-align:left">按 T 或停止按钮退出跟踪</td></tr><tr><td style="text-align:left">task10 左右移动无警报</td><td style="text-align:left">没有侧向超声波保护</td><td style="text-align:left">人工清场，不修改为“看似安全”</td></tr><tr><td style="text-align:left">task10 关闭后仍站立</td><td style="text-align:left">关闭不自动趴下/归零</td><td style="text-align:left">下次操作前先按 Space 收尾并确认状态</td></tr></tbody></table>
+</section>
+<section class="view" id="view-ch4">
+<header class="chapter-head"><span class="chapter-num">04</span><h2>Lite3 人体视觉跟随实验</h2></header>
+<h3>学习目标</h3>
+<p>本单元以 task12 为唯一教学入口。完成后学生应能够：</p>
+<ol><li>说明“视频采集 → YOLO 人体检测/跟踪 → 脚点像素 → 单应反投影 → 地面距离/偏角 → PID → 轴值”的完整链路。</li><li>按近左、近右、远右、远左顺序完成四点单应标定，并检查凸四边形和重投影残差。</li><li>使用 <code>--selfcheck</code> 与 <code>--offline</code> 在无运动条件下验证数值和视觉链路。</li><li>解释并验收视觉帧龄、感知链路超时、独立看门狗、声纳帧龄、目标距离迟滞和前后防撞。</li><li>解释双环 PID、死区、输出斜率限制、轴值缩放与零值保持。</li><li>在真机模式下拒绝 dummy 单应矩阵，按规范完成悬挂验证、小幅度跟随和安全退出。</li><li>说明 task11 已并入 task12，<code>legacy/task11_follow.py</code> 不是实验入口。</li></ol>
+<h3>建议学时</h3>
+<p>建议 <strong>2 学时</strong>为基础达标；若首次进行真机偏航与跟随，建议扩展为 <strong>3～4 学时</strong>。</p>
+<table><thead><tr><th style="text-align:left">环节</th><th style="text-align:right">建议时间</th><th style="text-align:left">是否运动</th></tr></thead><tbody><tr><td style="text-align:left">链路讲解、资源检查、selfcheck</td><td style="text-align:right">0.25 学时</td><td style="text-align:left">否</td></tr><tr><td style="text-align:left">真实四点标定与离线验证</td><td style="text-align:right">0.5 学时</td><td style="text-align:left">否</td></tr><tr><td style="text-align:left">标定拦截、安全机制讲解</td><td style="text-align:right">0.25 学时</td><td style="text-align:left">否</td></tr><tr><td style="text-align:left">悬挂/护架下真机方向与低速跟随</td><td style="text-align:right">0.75～1.5 学时</td><td style="text-align:left">是</td></tr><tr><td style="text-align:left">目标丢失/退出/数据复盘</td><td style="text-align:right">0.25 学时</td><td style="text-align:left">先停稳</td></tr></tbody></table>
+<h3>先修知识</h3>
+<ul><li>已通过 task01/task02 链路验收和 task06 点动停车实验。</li><li>已掌握 task10 的站立就绪、Space、T、Esc、失焦和停止按钮。</li><li>理解像素坐标、地面坐标、角度误差、单应矩阵和 PID 基本概念。</li><li>理解 <code>vel_body</code>、前/后超声波、状态帧龄与三个运动轴。</li><li>能按教师口令完成悬挂、护架、停车和人工扶稳。</li></ul>
+<h3>核心概念</h3>
+<h4>当前入口与资源</h4>
+<p>task12 复用 task10 的 GUI、机器人控制器和视频线程。默认资源为：</p>
+<table><thead><tr><th style="text-align:left">资源</th><th style="text-align:left">默认路径</th><th style="text-align:left">用途</th></tr></thead><tbody><tr><td style="text-align:left">真实单应矩阵</td><td style="text-align:left"><code>assets/H.npy</code></td><td style="text-align:left">真机与正式离线反投影</td></tr><tr><td style="text-align:left">占位矩阵</td><td style="text-align:left"><code>assets/H_dummy.npy</code></td><td style="text-align:left">仅帮助理解占位数据；<code>--dummy-h</code> 实际会按画面尺寸现场生成等价占位矩阵</td></tr><tr><td style="text-align:left">YOLO 权重</td><td style="text-align:left"><code>assets/yolov8n.pt</code></td><td style="text-align:left">YOLOv8 nano 人体检测/跟踪</td></tr><tr><td style="text-align:left">默认 RTSP</td><td style="text-align:left"><code>rtsp://192.168.1.120:8554/test?tcp</code></td><td style="text-align:left">机器人视频流</td></tr></tbody></table>
+<p>依赖由 <code>requirements.txt</code> 管理，GUI 还需要 Tkinter。资源文件存在不等于标定与当前相机姿态匹配，也不等于模型在课堂光线下表现合格。</p>
+<h4>四种运行模式</h4>
+<table><thead><tr><th style="text-align:left">命令/模式</th><th style="text-align:left">行为</th><th style="text-align:left">运动风险</th></tr></thead><tbody><tr><td style="text-align:left"><code>--selfcheck</code></td><td style="text-align:left">在加载 GUI 前执行 PID/死区数值断言</td><td style="text-align:left">不访问相机、不连接机器人、不发运动命令</td></tr><tr><td style="text-align:left"><code>--offline</code></td><td style="text-align:left">显示真实视频的检测、框、脚点、地面距离；控制器不启用真机心跳/状态/运动</td><td style="text-align:left">不发真机运动指令；声纳不参与门控</td></tr><tr><td style="text-align:left"><code>--offline --dummy-h</code></td><td style="text-align:left">用占位矩阵做脱机管线演示</td><td style="text-align:left">距离/偏角不代表真实地面测量，仅用于链路教学</td></tr><tr><td style="text-align:left">真机（可加 <code>--auto-follow</code>）</td><td style="text-align:left">复用 task10 控制器，先要求站立且移动模式就绪</td><td style="text-align:left">会发送前进与偏航轴，必须现场防护</td></tr></tbody></table>
+<p><code>--auto-follow</code> 在 GUI 启动约 500 ms 后尝试自动开始跟踪，不会自动起立。若机器人尚未准备移动模式，启动会失败并提示。首次课堂演示建议不加该参数，人工按 T 开始。</p>
+<h4>目标选择与脚点</h4>
+<p><code>TargetTracker</code> 仅检测 <code>classes=[0]</code>（人体），默认置信度为 0.5：</p>
+<ul><li>首次未锁定目标时，选择检测框水平中心最接近画面中心的人。</li><li>锁定后按 YOLO track ID 持续寻找同一个人。</li><li>跟踪点取检测框底边中点 <code>(cx, y2)</code>，不是框中心，也不是人体头部。</li><li>检测框坐标非有限值时按无目标处理。</li><li>tracker 在无 ID 或锁定目标消失时增加丢失计数，超过 10 次清除锁定 ID；但跟随安全层只要当前无目标就立即停车。</li></ul>
+<h4>地面标定与单应反投影</h4>
+<div class="diagram-scroll"><figure class="diagram"><svg viewBox="0 0 920 700" role="img" aria-labelledby="r-follow-title"><title id="r-follow-title">人体视觉跟随的感知到执行链路</title><defs><marker id="r-flow-arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" style="fill:var(--accent)"/></marker></defs><g font-family="Helvetica,Arial,sans-serif" text-anchor="middle"><rect x="150" y="20" width="620" height="76" rx="14" style="fill:var(--accent-soft);stroke:var(--accent)"/><text x="460" y="52" font-size="22" style="fill:var(--ink)">视频帧 + 采集时间</text><text x="460" y="78" font-size="16" style="fill:var(--ink-soft)">帧龄 &gt; 0.2 s：停车</text><line x1="460" y1="98" x2="460" y2="132" stroke-width="3" style="stroke:var(--accent)" marker-end="url(#r-flow-arrow)"/><rect x="150" y="136" width="620" height="76" rx="14" style="fill:var(--paper);stroke:var(--line)"/><text x="460" y="168" font-size="22" style="fill:var(--ink)">YOLO / ByteTrack 锁定人体</text><text x="460" y="194" font-size="16" style="fill:var(--ink-soft)">取检测框底边中点为脚点</text><line x1="460" y1="214" x2="460" y2="248" stroke-width="3" style="stroke:var(--accent)" marker-end="url(#r-flow-arrow)"/><rect x="150" y="252" width="620" height="76" rx="14" style="fill:var(--accent-soft);stroke:var(--accent)"/><text x="460" y="284" font-size="22" style="fill:var(--ink)">单应矩阵反投影到地面</text><text x="460" y="310" font-size="16" style="fill:var(--ink-soft)">像素 → 横向距离 / 前向距离</text><line x1="460" y1="330" x2="460" y2="364" stroke-width="3" style="stroke:var(--accent)" marker-end="url(#r-flow-arrow)"/><rect x="150" y="368" width="620" height="76" rx="14" style="fill:var(--paper);stroke:var(--line)"/><text x="460" y="400" font-size="22" style="fill:var(--ink)">双环 PID + 安全监督</text><text x="460" y="426" font-size="16" style="fill:var(--ink-soft)">偏航环 / 距离环 / 迟滞 / 斜率限制</text><line x1="460" y1="446" x2="460" y2="480" stroke-width="3" style="stroke:var(--accent)" marker-end="url(#r-flow-arrow)"/><rect x="150" y="484" width="620" height="76" rx="14" style="fill:var(--accent-soft);stroke:var(--accent)"/><text x="460" y="516" font-size="22" style="fill:var(--ink)">twist → 三轴轴值</text><text x="460" y="542" font-size="16" style="fill:var(--ink-soft)">限幅、死区补偿；侧向始终为 0</text><rect x="150" y="600" width="620" height="66" rx="14" style="fill:var(--paper);stroke:var(--accent-deep)"/><text x="460" y="629" font-size="19" style="fill:var(--accent-deep)">声纳原始帧龄 + 独立看门狗可随时否决输出</text><text x="460" y="653" font-size="16" style="fill:var(--ink-soft)">目标丢失或链路失效：立即归零</text></g></svg><figcaption>视觉估计只是输入；只有通过帧龄、感知、声纳和看门狗检查，PID 输出才允许变成运动轴值。</figcaption></figure></div>
+<p>标定要求四个地面标记与相机画面中的四个点一一对应。代码使用 3×3 单应矩阵 <code>H</code>：</p>
+<pre><code class="language-text">[u, v, 1]^T → H × [u, v, 1]^T → 除以第三项 → [X, Y, 1]</code></pre>
+<p>默认地面坐标为：</p>
+<table><thead><tr><th style="text-align:left">顺序</th><th style="text-align:left">标记</th><th style="text-align:left">地面坐标</th></tr></thead><tbody><tr><td style="text-align:left">1</td><td style="text-align:left">近左</td><td style="text-align:left">(-1, 1)</td></tr><tr><td style="text-align:left">2</td><td style="text-align:left">近右</td><td style="text-align:left">(1, 1)</td></tr><tr><td style="text-align:left">3</td><td style="text-align:left">远右</td><td style="text-align:left">(1, 3)</td></tr><tr><td style="text-align:left">4</td><td style="text-align:left">远左</td><td style="text-align:left">(-1, 3)</td></tr></tbody></table>
+<p>原点位于机器人地面投影，X 向右、Y 向前，单位由代码定义为米。教师必须用卷尺按这套坐标实际布点，不能把图中“看起来相近”的位置直接写成 1 m/3 m。</p>
+<p>代码要求源点和目标点都是顺序一致的凸四边形，允许整体顺时针或整体逆时针，拒绝交叉、自交或退化点序。求解后计算四个点的重投影残差，最大残差大于 <strong>0.005 m</strong> 时拒绝保存。</p>
+<p>地面投影模型以“脚点位于同一平面”为前提。检测框底边如果落在台阶、椅子或遮挡物上，反投影距离可能明显错误；课堂应选择平整地面、完整人体和稳定光照。</p>
+<h4>双环 PID 与坐标误差</h4>
+<p>对目标脚点反投影得到 <code>(lateral, forward)</code> 后：</p>
+<ul><li>前向距离 <code>distance = forward</code>；<code>forward &lt;= 0</code> 或坐标非有限时立即停车。</li><li>偏航误差 <code>error_x = atan2(lateral, forward)</code>，单位为弧度；目标在右时误差为正。</li><li>偏航环使用滤波后的误差、比例项和微分项。</li><li>距离环使用 <code>distance - target_distance</code> 的比例项与积分项。</li></ul>
+<p><code>DualLoopPID</code> 的默认参数如下：</p>
+<table><thead><tr><th style="text-align:left">参数</th><th style="text-align:right">默认值</th><th style="text-align:left">作用</th></tr></thead><tbody><tr><td style="text-align:left"><code>target_distance</code></td><td style="text-align:right">2.0 m</td><td style="text-align:left">期望跟随距离</td></tr><tr><td style="text-align:left"><code>kp_yaw</code> / <code>kd_yaw</code></td><td style="text-align:right">0.6 / 0.25</td><td style="text-align:left">偏航比例/微分</td></tr><tr><td style="text-align:left"><code>tau</code></td><td style="text-align:right">0.15 s</td><td style="text-align:left">偏航误差低通滤波时间常数</td></tr><tr><td style="text-align:left"><code>kp_vx</code> / <code>ki_vx</code></td><td style="text-align:right">0.5 / 0.05</td><td style="text-align:left">距离比例/积分</td></tr><tr><td style="text-align:left"><code>max_integral</code></td><td style="text-align:right">5.0</td><td style="text-align:left">距离积分限幅</td></tr><tr><td style="text-align:left"><code>vx_min</code> / <code>vx_max</code></td><td style="text-align:right">-0.2 / 0.4</td><td style="text-align:left">前向速度输出范围</td></tr><tr><td style="text-align:left"><code>wz_max</code></td><td style="text-align:right">0.25</td><td style="text-align:left">偏航角速度输出范围</td></tr><tr><td style="text-align:left"><code>yaw_deadzone</code></td><td style="text-align:right">0.06 rad</td><td style="text-align:left">偏航误差死区</td></tr><tr><td style="text-align:left"><code>dist_deadzone</code></td><td style="text-align:right">0.10 m</td><td style="text-align:left">距离误差死区</td></tr><tr><td style="text-align:left"><code>dvx_max</code></td><td style="text-align:right">0.15</td><td style="text-align:left">每标准 0.05 s 周期的最大速度变化</td></tr><tr><td style="text-align:left"><code>dwz_max</code></td><td style="text-align:right">0.5</td><td style="text-align:left">偏航输出变化斜率参数</td></tr><tr><td style="text-align:left"><code>WZ_SIGN</code></td><td style="text-align:right">+1</td><td style="text-align:left">偏航输出符号；真机必须验证</td></tr></tbody></table>
+<p>距离积分只在距离误差绝对值大于或等于 0.10 m 时更新；死区内输出速度为零，但已有积分不会自动清零。调用 <code>update(..., active=False)</code>、重置或停车时会同时清零滤波、积分和历史输出。</p>
+<p>首次更新使用 <code>dt=0.05 s</code>，之后按单调时钟计算，<code>dt</code> 限制在 0.01～0.5 s。偏航微分使用滤波后误差的变化率；滤波系数随 <code>dt</code> 改变。速度与角速度还有输出斜率限制，避免误差突变时立即给出大幅轴值。</p>
+<h4>从 twist 到轴值</h4>
+<p>默认缩放：</p>
+<ul><li>前向：<code>vx × 40000</code>。</li><li>偏航：<code>wz × 65534</code>。</li><li>侧向：跟随始终为 0。</li></ul>
+<p><code>_axis_value()</code> 将结果四舍五入并限制在 ±32767。若结果是非零但落在死区内，会改为死区外一单位：</p>
+<ul><li>前向最小非零绝对轴值为 <strong>6554</strong>。</li><li>偏航最小非零绝对轴值为 <strong>9554</strong>。</li><li>零输入始终输出零。</li></ul>
+<p>这一步保证低速后退和转向能越过固件死区，但<strong>不能证明方向正确</strong>。<code>pid_selfcheck()</code> 最后明确提示：偏航符号需悬挂测试真机确认。</p>
+<h4>视觉帧龄与独立看门狗</h4>
+<p>视频线程每次成功 <code>capture.read()</code> 后记录 <code>time.monotonic()</code>。跟随循环通过 <code>latest_with_timestamp()</code> 取回帧及其<strong>采集时间</strong>：</p>
+<ul><li>无帧或时间戳不大于 0：安全停车。</li><li>帧龄为负或大于 <strong>0.2 s</strong>：安全停车。</li><li>每轮循环开始刷新 <code>_last_update</code>；独立线程每 <strong>0.05 s</strong> 检查一次。</li><li>最近一次控制循环更新超过 <strong>1.0 s</strong>：轴归零、调用 <code>stop_tracking()</code> 退出跟踪状态（恢复手动可用）、结束会话。</li></ul>
+<p>帧龄解决“反复读取同一旧帧”的问题；看门狗解决“整个控制循环或推理卡住”的问题。两者不能互相替代。</p>
+<p><code>SafetySupervisor.link_timeout=0.5</code> 还检查最近一次成功 <code>tracker.update()</code> 的距离；超过 0.5 s 返回感知链路超时。目标为空但 tracker 正常返回时，该计时仍会刷新，随后由目标丢失规则立即停车。</p>
+<h4>声纳帧龄与距离迟滞</h4>
+<p>task12 从 <code>robot.snapshot()</code> 同时取得前声纳和 <code>state_age</code>，再调用：</p>
+<pre><code class="language-text">update_ultrasonic(distance, age)
+us_stamp = 当前单调时间 - age</code></pre>
+<p>因此声纳时间始终对原始状态帧负责，不会因为读取 snapshot 而变新。</p>
+<p>真机跟随要求：</p>
+<ul><li>状态原始帧龄不大于 <strong>0.3 s</strong>。</li><li>前声纳存在、有限且大于 0。</li><li>前声纳小于 1.0 m 时进入阻塞，大于 1.3 m 时解除。</li><li>阻塞时决策为 <code>STOP</code>，不是仅禁止前进。</li></ul>
+<p>视觉目标距离使用另一组迟滞：</p>
+<ul><li>小于 1.0 m：进入“过近”；大于 1.3 m：解除。</li><li>大于 3.5 m：进入“过远”；小于 3.0 m：解除。</li><li>过近：<code>ONLY_TURN</code>，前进轴为 0，只允许偏航。</li><li>过远：<code>STOP</code>。</li><li>1.0～3.5 m 之间且未处于迟滞状态：正常双环控制。</li></ul>
+<p>迟滞可减少阈值附近的频繁切换。task10 控制器还有第二层保护：跟踪前进受前声纳 1.0 m 阈值约束，跟踪后退受后声纳约束；一旦触发，forward 与 yaw 都归零，比 <code>ONLY_TURN</code> 更保守。</p>
+<h4>dummy 三重拦截</h4>
+<p>真机不得使用占位矩阵。当前实现从三个层次拦截：</p>
+<ol><li>命令行：<code>--dummy-h</code> 不同时带 <code>--offline</code> 时直接报错。</li><li><code>FollowSession.start()</code> 再次检查 dummy 标志与真机模式，防止绕过入口直接调用。</li><li>加载 <code>.npy</code> 后检查形状为 3×3、元素有限；真机还拒绝文件名包含 <code>dummy</code>，以及与当前画面尺寸生成的占位矩阵在绝对误差 1e-9 内相同的矩阵。</li></ol>
+<p>把 <code>H_dummy.npy</code> 改名为 <code>H.npy</code> 不能绕过数值检查。正确做法是重新完成真实标定，而不是伪造文件名。</p>
+<h4>手动/跟踪互斥与退出</h4>
+<ul><li>开始跟踪要求机器人已经站立、移动模式就绪、轴流存在且不在过渡态。</li><li>开始跟踪会清空手动方向键；跟踪期间方向键输入被拒绝。</li><li>按 T、停止按钮、Esc、窗口失焦、Space、回零或切换步态都会先停止跟踪。</li><li>停止跟踪调用 <code>robot.stop_tracking()</code>，将 forward/yaw 清零并退出跟踪状态（恢复手动可用）；之后可恢复手动控制。</li><li>跟踪线程和看门狗线程停止后会等待释放；界面关闭还会关闭视频与 UDP。</li></ul>
+<h3>教师演示步骤</h3>
+<h4>离线准备</h4>
+<ol><li>在项目根目录检查资源与依赖：</li></ol>
+<pre><code class="language-bash">cd ~/lite3_lab/real_robot
+source .venv/bin/activate
+python3 -c &quot;from pathlib import Path; import cv2, numpy, PIL; print([p.name for p in Path(&#x27;assets&#x27;).iterdir()])&quot;</code></pre>
+<ol><li>运行数值自检：</li></ol>
+<pre><code class="language-bash">python3 task12_follow.py --selfcheck</code></pre>
+<p>预期检查项包括：目标在右时偏航输出符号符合 <code>WZ_SIGN</code>、目标偏远时前进、目标偏近时后退、死区输出零、非 active 时积分清零、首周期斜率受限、后退轴越过死区。全部断言通过才进入视觉链路。</p>
+<ol><li>运行真实标定文件的离线链路：</li></ol>
+<pre><code class="language-bash">python3 task12_follow.py --offline</code></pre>
+<p>让一名学生站在相机画面中，观察人体框、脚点、<code>distance</code> 与状态文字。强调此时只做显示，不发送真机运动命令，声纳保护关闭。</p>
+<ol><li>运行占位矩阵演示：</li></ol>
+<pre><code class="language-bash">python3 task12_follow.py --offline --dummy-h</code></pre>
+<p>比较距离与真实标定离线结果的差异，说明 dummy 只验证代码管线，不验证实际米制距离。</p>
+<ol><li>演示 dummy 拒绝。在机器人趴下、现场受控时运行下列命令，预期在进入跟踪前报错：</li></ol>
+<pre><code class="language-bash">python3 task12_follow.py --dummy-h</code></pre>
+<p>不进入 GUI，不按 T，不启用心跳或运动。</p>
+<h4>真实标定</h4>
+<ol><li>保持相机与机器人相对位置固定，之后不再移动相机或机器人底座。</li><li>用卷尺在地面布置四点，坐标严格按 <code>(-1,1)、(1,1)、(1,3)、(-1,3)</code> 设置；标记应清晰且不被人体长期遮挡。</li><li>备份现有 <code>H.npy</code> 后再开始，避免误覆盖：</li></ol>
+<pre><code class="language-bash">cp assets/H.npy assets/H.npy.before-calibration</code></pre>
+<ol><li>运行：</li></ol>
+<pre><code class="language-bash">python3 task12_follow.py --calibrate</code></pre>
+<ol><li>等待单帧视频，在 <code>Calibration</code> 窗口按近左、近右、远右、远左顺序左键点击。右键或 R 清除，Esc 中止。</li><li>只有终端提示四点为凸四边形、求解成功、最大重投影残差不大于 0.005 m 并保存成功，才记为标定有效。</li><li>重新运行 <code>--offline</code>，用已知地面位置检查反投影是否合理。若站立位置变化导致脚点不在地面，应重新理解误差来源，不能盲目调 PID。</li></ol>
+<h4>真机安全验证</h4>
+<ol><li>使用悬挂或护架限制机体，前后至少 2 m 清场，左右路径额外清场；安全员全程扶稳，人员不站在机器人碰撞路径上。</li><li>启动 <code>python3 task12_follow.py</code>，先按 Space 起立并等待“运动就绪”。</li><li>不站入跟随路径，按 T 开始搜索；无目标时应立即停车。记录“目标丢失，已停车”的出现。</li><li>先让目标从画面右侧小幅进入，验证偏航是否向正确方向旋转；若方向反，立即停止，由教师检查 <code>WZ_SIGN</code> 与坐标约定。本课程不现场修改代码。</li><li>在悬挂条件下进行极短时低速距离跟随，观察 vx 正负、过近/过远迟滞和声纳提示。</li><li>演示 Esc、失焦、T 和停止按钮四种退出，确认每次运动轴归零、跟踪退出、手动可恢复。</li><li>不通过遮挡相机、拔网线或让推理长时间卡死来验证运动中的看门狗；此类故障注入先做离线/单元测试，真机只在稳定悬挂且无目标静止条件下由教师执行。</li><li>结束前停止跟踪、按 Space 趴下，再按任务要求归零并确认状态。</li></ol>
+<h3>学生实操步骤</h3>
+<h4>第一步：数值自检</h4>
+<ol><li>运行 <code>python3 task12_follow.py --selfcheck</code>。</li><li>保存完整输出，逐项对应七项断言。</li><li>回答：为什么“目标偏近应后退”和“后退轴越过死区”是两个不同检查？</li><li>自检失败时先检查依赖与文件是否被改动，不进入真机。</li></ol>
+<h4>第二步：离线视觉链路</h4>
+<ol><li>运行 <code>python3 task12_follow.py --offline</code>，确认检测到人体且跟踪 ID 尽量稳定。</li><li>记录目标在画面左、中、右三种位置时的偏角趋势和距离显示。</li><li>让目标暂时离开画面，确认显示“目标丢失，已停车”；离线模式没有真机轴可停，但状态逻辑仍执行。</li><li>比较 <code>--offline --dummy-h</code> 与真实 <code>H.npy</code> 的距离结果，说明占位矩阵不能用于真机。</li><li>检查框底边是否确实落在地面脚点；若是床面、椅子或台阶，记录模型误差而不改判为标定成功。</li></ol>
+<h4>第三步：标定与复核</h4>
+<ol><li>按教师布点测量四个坐标，记录卷尺读数。</li><li>备份旧矩阵，运行 <code>--calibrate</code>，按指定顺序点击。</li><li>若提示非凸四边形或残差异常，右键/R 清除后重新点击，不手动编辑 <code>.npy</code> 伪造通过。</li><li>保存后再次运行 <code>--offline</code>，在 2～3 个已知位置检查反投影结果。</li><li>记录相机是否移动、光照是否变化、人体是否完整入镜。任一条件改变后，先复核标定，再考虑 PID。</li></ol>
+<h4>第四步：真机受控跟随</h4>
+<ol><li>完成安全检查，启动真机 GUI 并按 Space 准备移动模式。</li><li>按 T 启动，先验证无目标立即停车。</li><li>在悬挂/护架下小幅验证偏航方向，再验证短时前进/后退。</li><li>观察并记录以下状态：目标丢失、视频帧过期、声纳数据超时/近障、目标过近、目标过远、看门狗提示。不能触发的项目用单元测试或教师离线演示补足，不为凑指标冒险制造真机故障。</li><li>每次退出都检查跟踪按钮恢复“开始跟踪”，运动停止，随后再趴下/归零。</li></ol>
+<h4>第五步：自动化安全测试</h4>
+<p>运行项目现有测试，不连接机器人：</p>
+<pre><code class="language-bash">python3 -m unittest discover -s tests -v</code></pre>
+<p>与 task12 直接相关的测试包括：</p>
+<ul><li>视频时间戳保留，断流错误使时间戳失效。</li><li>声纳使用原始状态帧龄，0.4 s 旧数据在 0.3 s 阈值下被拒绝。</li><li>后退、偏航小输出越过死区。</li><li>看门狗超时发送零轴、退出跟踪状态（恢复手动可用）并结束会话。</li><li>真机拒绝 dummy 文件名矩阵。</li><li>停止跟踪恢复手动模式；跟踪启动要求运动就绪；跟踪期间手动方向被禁用。</li></ul>
+<p>测试通过不代表真机安全已经验证；它证明相关逻辑在模拟条件下符合预期。</p>
+<h3>思考题</h3>
+<ol><li>为什么用检测框底边中点而不是框中心作为地面反投影点？哪些场景会破坏这个假设？</li><li>四点标定为什么要求凸四边形和固定顺序？交换近左/近右会发生什么？</li><li><code>--offline --dummy-h</code> 能验证什么，不能验证什么？</li><li>偏航误差为什么用 <code>atan2(lateral, forward)</code>，而不是直接用像素横坐标误差？</li><li>视觉帧龄 0.2 s、感知链路 0.5 s、看门狗 1.0 s、声纳帧龄 0.3 s 分别覆盖哪一段故障？</li><li>为什么距离积分需要在死区外更新，并在停车时清零？</li><li>死区抬升为什么能帮助后退和转向，却可能放大噪声？零值为什么仍必须保持零？</li><li>目标过近时 <code>ONLY_TURN</code> 允许旋转，而 task10 的前后近障保护会把 yaw 也归零，两层保护应如何理解？</li><li>为什么把 dummy 文件改名不能绕过真机拦截？</li><li>为什么 <code>--selfcheck</code> 与单元测试通过后，仍需做悬挂真机偏航验证？</li></ol>
+<h3>验收标准</h3>
+<h4>离线与标定</h4>
+<ul><li><code>--selfcheck</code> 七项断言全部通过，能解释偏航符号尚需真机确认。</li><li><code>--offline</code> 能显示人体框和脚点，不发送运动命令；<code>--dummy-h</code> 结果明确标注为非真实距离。</li><li>四点顺序正确，地面坐标用卷尺核实；标定残差最大不超过 0.005 m。</li><li>标定复核中能指出至少两种脚点不在地面或相机变化导致的误差来源。</li></ul>
+<h4>安全逻辑</h4>
+<table><thead><tr><th style="text-align:left">项目</th><th style="text-align:left">验收要求</th></tr></thead><tbody><tr><td style="text-align:left">视觉帧龄</td><td style="text-align:left">能说出 0.2 s 判据及无帧/负帧龄也停车</td></tr><tr><td style="text-align:left">感知链路</td><td style="text-align:left">能说出 0.5 s 超时；正常返回无目标仍由丢失规则停车</td></tr><tr><td style="text-align:left">看门狗</td><td style="text-align:left">能说出 1.0 s、0.05 s 检查周期及“退出跟踪状态（恢复手动可用）”</td></tr><tr><td style="text-align:left">声纳帧龄</td><td style="text-align:left">使用原始 <code>state_age</code>，0.3 s 超时；不能靠读取刷新</td></tr><tr><td style="text-align:left">声纳有效性</td><td style="text-align:left">有限且大于 0；小于 1.0 m 阻塞、大于 1.3 m 恢复</td></tr><tr><td style="text-align:left">视觉距离</td><td style="text-align:left">过近 1.0/1.3 m 迟滞，过远 3.5/3.0 m 迟滞</td></tr><tr><td style="text-align:left">目标丢失</td><td style="text-align:left">当前实现立即停车，不是等待 10 帧</td></tr><tr><td style="text-align:left">PID 停车</td><td style="text-align:left">非 active 时速度、角速度、积分与滤波状态清零</td></tr><tr><td style="text-align:left">轴死区</td><td style="text-align:left">非零小输出越过死区，零输入仍为零</td></tr><tr><td style="text-align:left">dummy</td><td style="text-align:left">CLI、会话启动、文件名/数值检查三层拒绝真机使用</td></tr><tr><td style="text-align:left">互斥</td><td style="text-align:left">跟踪禁手动；停止跟踪后恢复手动</td></tr><tr><td style="text-align:left">退出</td><td style="text-align:left">T/Esc/失焦/停止按钮均停运动并退出跟踪</td></tr></tbody></table>
+<h4>真机表现</h4>
+<ul><li>在悬挂/护架下确认偏航方向正确；方向反时立即停止，不盲目加大输出。</li><li>无目标时真机运动轴归零，日志显示“目标丢失，已停车”。</li><li>能完成一次短时、低速、受控跟随，无碰撞、无人员进入运动路径。</li><li>退出跟踪后手动控制恢复；最终按 Space 趴下并完成所需归零。</li><li>实验报告记录标定、离线输出、真机日志和安全退出过程，不只有截图。</li></ul>
+<h3>常见错误</h3>
+<table><thead><tr><th style="text-align:left">错误/现象</th><th style="text-align:left">原因</th><th style="text-align:left">处理</th></tr></thead><tbody><tr><td style="text-align:left">selfcheck 报错或依赖导入失败</td><td style="text-align:left">虚拟环境、依赖或资源不匹配</td><td style="text-align:left">回到 WSL 项目环境检查，不进真机</td></tr><tr><td style="text-align:left">离线无画面</td><td style="text-align:left">RTSP 地址、网络、FFmpeg 或相机连接异常</td><td style="text-align:left">先检查视频线程错误，再检查 UDP</td></tr><tr><td style="text-align:left">dummy 模式距离“很准”</td><td style="text-align:left">占位矩阵恰好符合简化画面</td><td style="text-align:left">仍不得用于真机，必须真实标定</td></tr><tr><td style="text-align:left">标定提示非凸四边形</td><td style="text-align:left">点序交叉、点击错点或标记位置错误</td><td style="text-align:left">右键/R 清除，按近左→近右→远右→远左重选</td></tr><tr><td style="text-align:left">残差大于 0.005 m</td><td style="text-align:left">点选错误、坐标与实物不符、求解异常</td><td style="text-align:left">重新测量布点并标定，不手动篡改矩阵</td></tr><tr><td style="text-align:left">离线距离随姿态变化很大</td><td style="text-align:left">脚点不在同一地面平面、相机移动、遮挡</td><td style="text-align:left">固定相机、选择平整地面和完整人体后复核</td></tr><tr><td style="text-align:left">真机拒绝 dummy</td><td style="text-align:left">安全设计生效</td><td style="text-align:left">使用真实 <code>H.npy</code> 重新标定</td></tr><tr><td style="text-align:left">偏航方向反</td><td style="text-align:left">坐标约定或 <code>WZ_SIGN</code> 与真机不一致</td><td style="text-align:left">立即停车，教师分析；课堂不改代码</td></tr><tr><td style="text-align:left">一直停车并提示帧过期</td><td style="text-align:left">视频卡顿、旧帧被重复读取或推理过慢</td><td style="text-align:left">停止真机，先离线排查帧龄和性能</td></tr><tr><td style="text-align:left">声纳值很大仍提示超时</td><td style="text-align:left">数值存在但状态帧龄超过 0.3 s</td><td style="text-align:left">检查状态上报链路，不能读取刷新</td></tr><tr><td style="text-align:left">无目标仍偶尔动一下</td><td style="text-align:left">对锁定 ID 保留与安全层行为理解错误</td><td style="text-align:left">核对当前 <code>check()</code>：无目标立即 STOP</td></tr><tr><td style="text-align:left">跟踪中方向键无效</td><td style="text-align:left">手动/跟踪互斥</td><td style="text-align:left">先按 T 或停止按钮退出跟踪</td></tr><tr><td style="text-align:left">过近时仍前进</td><td style="text-align:left">把 <code>ONLY_TURN</code> 误解为正常前进，或看错日志</td><td style="text-align:left"><code>ONLY_TURN</code> 必须 vx=0；检查实际轴值</td></tr><tr><td style="text-align:left">关闭窗口后机器人站立</td><td style="text-align:left">GUI 关闭不自动趴下/归零</td><td style="text-align:left">关闭前停止跟踪并按 Space 收尾</td></tr></tbody></table>
+</section>
+<section class="view" id="view-ch5">
+<header class="chapter-head"><span class="chapter-num">05</span><h2>Lite3 实训考核与故障排查</h2></header>
+<h3>学习目标</h3>
+<ol><li>按照可观察、可量化的标准完成个人与小组真机考核。</li><li>用状态帧、速度、停车日志、标定残差与界面提示证明实验结果。</li><li>按“先停车、再保活/扶稳、后定位链路、最后重试”的顺序处理故障。</li><li>区分网络、状态机、运动轴、声纳、视频、标定、PID 与 GUI 问题。</li><li>如实记录失败和未验证项，不绕过安全门控或修改代码制造“通过”。</li><li>能解释 task04 历史缺失、task11 已并入 task12，并使用现行测试入口。</li></ol>
+<h3>建议学时</h3>
+<p>建议 <strong>2 学时</strong>：考核说明与排障演练 0.5 学时，分组/个人考核 1 学时，复盘 0.5 学时。实操能力不足时，可增加 1 次补测；补测不压缩安全演示。</p>
+<h3>先修知识</h3>
+<ul><li>已学习本课程 01～05 各单元。</li><li>能独立运行 task01/task02/task03/task05/task06/task07/task08/task09/task10/task12。</li><li>能使用 Python 命令行、查看终端日志、运行 unittest 和检查网络端口。</li><li>理解状态三元组、帧龄、零值轴流、死区、声纳阈值与单应矩阵。</li></ul>
+<h3>核心概念</h3>
+<h4>证据链优于“看起来成功”</h4>
+<p>每个实验至少需要四类证据：</p>
+<ol><li><strong>输入</strong>：运行命令、参数、机器人 IP、状态端口、现场状态。</li><li><strong>过程</strong>：状态三元组、四膝、速度、声纳、界面提示或标定残差。</li><li><strong>结果</strong>：动作完成判据、停车判据、退出后姿态。</li><li><strong>安全</strong>：清场、扶稳、控制源唯一、停止口令和异常处理。</li></ol>
+<p>例如 task06 仅记录“脚本跑完了”不够；应记录点动速度峰值、停车后有效速度样本、forward 归零、收尾归零状态。</p>
+<h4>故障处理优先级</h4>
+<p>真机异常按以下顺序处理：</p>
+<ol><li><strong>停</strong>：停止目标跟踪、松开方向键、发零轴；紧急时按实验室规程执行软急停、人工扶稳或物理断电。</li><li><strong>稳</strong>：保持零值轴流或扶稳，确认机器人不会继续移动或突然失去支撑。</li><li><strong>读</strong>：保存终端与界面提示原文，记录当前三元组和状态年龄。</li><li><strong>分</strong>：判断是控制链路、状态链路、传感器、视频、标定还是 PID。</li><li><strong>修</strong>：只改变一个变量；先离线验证，再从小运动量真机复测。</li><li><strong>记</strong>：故障未解决或安全条件不足时，停止实验并报告教师。</li></ol>
+<h4>现行边界</h4>
+<ul><li>task04 历史缺失，不布置补做。</li><li>task11 已并入 task12；<code>legacy/task11_follow.py</code> 不参与安装、测试、评分和运行。</li><li>task09 只验证前后左右平移，不包含偏航转向。</li><li>task12 真机偏航方向必须单独验证；PID 自检不能替代真机方向测试。</li><li>task08 的近障行为是停止 forward 并原地保持，不是自动绕障；其 <code>--cooldown</code> 当前未接入停车函数，实际观察上限为 5 s。</li><li>task10 入口是真机控制；脱机视觉验证用 <code>task12_follow.py --offline</code>。</li></ul>
+<h3>教师演示步骤</h3>
+<ol><li>公布评分量规、安全否决项、分组角色轮换和补测规则。</li><li>展示一份合格记录：包含命令、状态、速度、停车、退出和异常原文；再展示一份只有“成功”的无效记录。</li><li>演示 task07 停车失败日志，要求学生区分“方向正确”与“已停稳”。</li><li>演示 task08 固定障碍触发，让学生识别“原地运动”和“自动避障”的差别。</li><li>演示 task12 <code>--selfcheck</code>、<code>--offline --dummy-h</code> 和 dummy 真机拒绝，要求学生说明各模式边界。</li><li>设置一个无真机运动风险的故障，例如状态端口被占用或 task12 使用 dummy 真机参数，让学生按排障表定位。</li><li>演练一次停止流程：操作员停止输入，安全员扶稳，记录员保存提示，教师决定是否继续。</li><li>按量规逐项打分，安全否决项单独记录原因，不用其他高分抵消。</li></ol>
+<h3>学生实操步骤</h3>
+<h4>考核前</h4>
+<ol><li>提交实验记录：每个任务的命令、参数、关键日志、结果判据、异常与退出姿态。</li><li>完成个人口述准备：98、稳定站立、移动就绪、归零、死区、帧龄、看门狗、dummy 拦截。</li><li>小组确认角色与轮换顺序，准备软急停终端。</li><li>检查场地、悬挂/护架、线缆、电量、状态端口和控制源唯一性。</li><li>从稳定趴下开始。若机器人姿态未知，先停止并报告教师，不直接起立。</li></ol>
+<h4>考核中</h4>
+<ol><li>先完成 task01/task02 只读链路，再进入任何运动。</li><li>基础项目由教师现场指定参数，学生先复述预期动作和停车条件，再执行。</li><li>综合项目重点观察启动门控、方向符号、停车与退出，不以脚本运行速度评分。</li><li>视觉项目先离线，再标定复核，最后悬挂真机验证；不得用 dummy 跑真机。</li><li>出现方向反、状态丢失、停车失败、异常碰撞风险时，立即停止并记录，不连续重试。</li><li>退出前停止跟踪、清空按键、按 Space 趴下，按考核要求归零并确认状态。</li></ol>
+<h4>考核后</h4>
+<ol><li>关闭 GUI 和所有控制终端，确认没有残留心跳/轴流客户端。</li><li>解除扶稳前确认机器人稳定趴下、无线缆缠绕、场地无遗留障碍。</li><li>整理记录，标清“已验证、未触发、失败、由教师演示”四种结果。</li><li>对每个失败项写出根因、处理动作和防止复发的方法。</li><li>将单元测试结果作为逻辑验证证据，不把 unittest 通过写成真机验收通过。</li></ol>
+<h3>思考题</h3>
+<ol><li>为什么安全否决项不能用协议或视觉高分抵消？</li><li>task06 的哪些日志能证明方向正确，哪些能证明真正停稳？</li><li>task07 与 task08 的停车参数行为有何不同？</li><li>task09 状态帧丢失时为什么需要人工停止？它与 task08 的失效处理有何差异？</li><li>声纳数值正常但帧龄过期时，为什么不继续跟随？</li><li>视觉帧龄与看门狗分别解决什么问题？为什么还需要感知链路超时？</li><li>为什么 dummy 拦截必须同时检查命令行、文件名和矩阵数值？</li><li>标定残差合格但真实距离仍偏差很大，可能有哪些原因？</li><li>记录“未触发的安全机制”时，应如何用测试或教师演示补足证据？</li><li>为什么 task11 不能作为补考入口？</li></ol>
+<h3>验收标准</h3>
+<h4>量化评分量规</h4>
+<p>总分 <strong>100 分</strong>，建议 80 分及格；安全否决项触发时，无论总分多少，本次真机考核记为“暂停/不通过”，整改后重测。</p>
+<table><thead><tr><th style="text-align:left">维度</th><th style="text-align:right">分值</th><th style="text-align:left">评分观察点</th></tr></thead><tbody><tr><td style="text-align:left">安全操作与收尾</td><td style="text-align:right">20</td><td style="text-align:left">清场、扶稳、控制源、停止响应、最终姿态</td></tr><tr><td style="text-align:left">协议与状态判读</td><td style="text-align:right">15</td><td style="text-align:left">UDP、0901/0902、98、三元组、帧龄、归零</td></tr><tr><td style="text-align:left">基础控制</td><td style="text-align:right">20</td><td style="text-align:left">task01/02/03/05/06 的证据与判据</td></tr><tr><td style="text-align:left">综合控制</td><td style="text-align:right">15</td><td style="text-align:left">task07/08/09/10 的停车、方向、门控、互斥</td></tr><tr><td style="text-align:left">视觉跟随</td><td style="text-align:right">20</td><td style="text-align:left">标定、离线、PID、安全、dummy、真机退出</td></tr><tr><td style="text-align:left">记录与排障</td><td style="text-align:right">10</td><td style="text-align:left">命令、日志、根因、复盘、历史编号</td></tr></tbody></table>
+<p>每个维度按表现系数计分：</p>
+<table><thead><tr><th style="text-align:left">等级</th><th style="text-align:right">系数</th><th style="text-align:left">判断标准</th></tr></thead><tbody><tr><td style="text-align:left">优秀</td><td style="text-align:right">1.0</td><td style="text-align:left">独立完成，证据完整，能解释失败与边界条件</td></tr><tr><td style="text-align:left">良好</td><td style="text-align:right">0.85</td><td style="text-align:left">少量提示下完成，主要证据完整，能正确排障</td></tr><tr><td style="text-align:left">合格</td><td style="text-align:right">0.70</td><td style="text-align:left">在教师分步指导下完成，结果有效，无安全违规</td></tr><tr><td style="text-align:left">待补测</td><td style="text-align:right">0.40</td><td style="text-align:left">结果不完整、证据不足或关键概念错误</td></tr><tr><td style="text-align:left">未完成</td><td style="text-align:right">0</td><td style="text-align:left">未执行、结果不可复现或主要任务失败</td></tr></tbody></table>
+<p>例如安全维度 20 分、表现“良好”，得 17 分；协议维度 15 分、表现“合格”，得 10.5 分。</p>
+<h4>分项验收点</h4>
+<table><thead><tr><th style="text-align:left">验收点</th><th style="text-align:left">分值归属</th><th style="text-align:left">量化/行为标准</th></tr></thead><tbody><tr><td style="text-align:left">task01 双向链路</td><td style="text-align:left">基础控制</td><td style="text-align:left">有状态帧、无 ICMP 不可达；发送计数不单独作为通过依据</td></tr><tr><td style="text-align:left">task02 状态/关节</td><td style="text-align:left">基础控制、协议</td><td style="text-align:left">正确读取 0901/0902、四膝和超声波；98 解释正确</td></tr><tr><td style="text-align:left">task03 起立/归零</td><td style="text-align:left">基础控制</td><td style="text-align:left">(6,0,0)+四膝 60°～90°连续 3 s；归零见 17 再回 1</td></tr><tr><td style="text-align:left">task05 移动准备</td><td style="text-align:left">基础控制</td><td style="text-align:left">basic=6、gait=0、四膝 60°～130°；forward 始终 0</td></tr><tr><td style="text-align:left">task06 点动</td><td style="text-align:left">基础控制、安全</td><td style="text-align:left">点动峰值大于 0.02 m/s；有效停车样本且速度停稳</td></tr><tr><td style="text-align:left">task07 持续前进</td><td style="text-align:left">综合控制</td><td style="text-align:left">方向正确；cooldown 内 <code>abs(vel)&lt;0.02 m/s</code></td></tr><tr><td style="text-align:left">task08 声纳保护</td><td style="text-align:left">综合控制</td><td style="text-align:left">近障/无效/缺状态 forward=0；安全时恢复；无自动绕障误解</td></tr><tr><td style="text-align:left">task09 四向符号</td><td style="text-align:left">综合控制</td><td style="text-align:left">vx/vy 符号正确；段间停 2 s；明确 yaw=0</td></tr><tr><td style="text-align:left">task10 手动 GUI</td><td style="text-align:left">综合控制、安全</td><td style="text-align:left">姿态门控、松键/Esc/失焦停车、侧移人工保护</td></tr><tr><td style="text-align:left">task12 标定</td><td style="text-align:left">视觉跟随</td><td style="text-align:left">四点顺序与坐标正确；凸四边形；最大残差不大于 0.005 m</td></tr><tr><td style="text-align:left">task12 离线</td><td style="text-align:left">视觉跟随</td><td style="text-align:left">selfcheck 通过；offline 不发运动；dummy 仅离线</td></tr><tr><td style="text-align:left">task12 真机</td><td style="text-align:left">视觉跟随、安全</td><td style="text-align:left">悬挂偏航验证；无目标立即停车；声纳/退出正常；收尾安全</td></tr></tbody></table>
+<h4>安全否决项</h4>
+<p>出现以下任一行为，立即终止本次真机操作：</p>
+<ul><li>未清场、未扶稳或让人员进入机器人运动/夹伤路径。</li><li>同时运行多个控制客户端，或在方向反、停车失败后仍连续加大轴值/时长。</li><li>关闭状态监听、绕过启动门控或使用 dummy 矩阵进行真机跟随。</li><li>明知状态帧过期仍保持手动运动，或忽略 task09 缺状态时轴值不自动归零的风险。</li><li>用真人作为碰撞/避障测试目标。</li><li>发生异常后隐瞒、伪造日志，或在机器人仍运动/未稳定时离开。</li><li>把 <code>legacy/task11_follow.py</code> 作为安装、补考或真机运行入口。</li></ul>
+<h4>合格实验记录的最少字段</h4>
+<pre><code class="language-text">任务/脚本：
+日期、组号、角色：
+命令与全部参数：
+运行前三元组、电量、四膝、前/后距离：
+动作期状态与速度证据：
+停车后有效速度与停稳时间：
+声纳/视频/标定证据（适用时）：
+异常提示原文：
+停止方式（松键/T/Esc/Ctrl-C/软急停）：
+退出后姿态与归零状态：
+根因、整改与未验证项：
+教师安全签字：</code></pre>
+<h3>故障排查总表</h3>
+<h4>网络、端口与状态链路</h4>
+<table><thead><tr><th style="text-align:left">故障现象</th><th style="text-align:left">可能原因</th><th style="text-align:left">诊断方法</th><th style="text-align:left">处理</th></tr></thead><tbody><tr><td style="text-align:left">task01 tx 增长但 rx=0</td><td style="text-align:left">上报目标未指向本机、43897 占用、防火墙</td><td style="text-align:left">检查端口绑定与机器人上报配置；运行 task02</td><td style="text-align:left">停止运动实验，恢复状态链路后再继续</td></tr><tr><td style="text-align:left">ICMP 端口不可达</td><td style="text-align:left">机器人控制端口无监听、IP 错、网络断开</td><td style="text-align:left">核对默认 192.168.1.120:43893、供电与运控程序</td><td style="text-align:left">不连续发运动命令试探；报告教师</td></tr><tr><td style="text-align:left">状态端口绑定失败</td><td style="text-align:left">另一个进程占用本地 UDP 端口</td><td style="text-align:left">查看进程与端口占用；关闭冲突客户端</td><td style="text-align:left">每台机器人同一时刻只保留一个控制源</td></tr><tr><td style="text-align:left">状态时有时无</td><td style="text-align:left">网络抖动、上报目标错误、端口冲突</td><td style="text-align:left">比较 rx 计数是否持续增长、state_age 是否反复过期</td><td style="text-align:left">先恢复稳定链路；运动中按安全停止处理</td></tr><tr><td style="text-align:left"><code>get_state()</code> 突然为 None</td><td style="text-align:left">未收到或帧龄超过 0.5 s</td><td style="text-align:left">查看累计 rx 计数与原始 state_age</td><td style="text-align:left">不把旧数据当实时数据，停止相关运动</td></tr><tr><td style="text-align:left">有关节角度但无状态</td><td style="text-align:left">0902 正常、0901 未到达</td><td style="text-align:left">分别看 rx_count/joint_rx_count</td><td style="text-align:left">task03 需要两者，先修 0901</td></tr><tr><td style="text-align:left">98 被误报为故障</td><td style="text-align:left">把 payload 首字段当 code</td><td style="text-align:left">查看 <code>(98,0,0)</code> 与公共状态表</td><td style="text-align:left">按初始待机处理；首次起立要求电量高于 20%</td></tr></tbody></table>
+<h4>起立、模式与姿态</h4>
+<table><thead><tr><th style="text-align:left">故障现象</th><th style="text-align:left">可能原因</th><th style="text-align:left">诊断方法</th><th style="text-align:left">处理</th></tr></thead><tbody><tr><td style="text-align:left">task03 起立超时</td><td style="text-align:left">无 0901/0902、四膝不在范围、外力阻挡、状态被其他客户端改变</td><td style="text-align:left">查看阶段 A 日志、三元组与四膝</td><td style="text-align:left">扶稳并排查；不盲目加轴</td></tr><tr><td style="text-align:left">非趴下/非稳定站立时 task03 拒绝</td><td style="text-align:left">启动保护生效</td><td style="text-align:left">查看当前状态和是否误用 <code>--force</code></td><td style="text-align:left">先恢复稳定趴下；<code>--force</code> 仅由教师判断</td></tr><tr><td style="text-align:left">98 下电量不高于 20% 禁止起立</td><td style="text-align:left">代码首次起立电量门控</td><td style="text-align:left">读取 battery_level</td><td style="text-align:left">更换/充电后重试，不绕过</td></tr><tr><td style="text-align:left">起立中途姿态变低</td><td style="text-align:left">起立阶段发送轴指令或其他客户端干扰</td><td style="text-align:left">检查是否有移动模式/轴流</td><td style="text-align:left">停止轴指令，重新按起立流程确认</td></tr><tr><td style="text-align:left">task05/06 切步态失败</td><td style="text-align:left">basic=16 AI 状态、未切移动模式、gait 非 0</td><td style="text-align:left">查看阶段 B 当前 basic/gait</td><td style="text-align:left">恢复非 AI 移动模式后重跑</td></tr><tr><td style="text-align:left">已站立但方向键禁用</td><td style="text-align:left">task10 尚未准备移动模式或仍在过渡</td><td style="text-align:left">查看姿态/状态标签</td><td style="text-align:left">按 Space 完成准备并等待就绪</td></tr><tr><td style="text-align:left">正在趴下仍重复命令</td><td style="text-align:left">状态 (7,0,0) 过渡态</td><td style="text-align:left">查看状态序列</td><td style="text-align:left">等待自然稳定，不连续发切换命令</td></tr><tr><td style="text-align:left">归零一直不成功</td><td style="text-align:left">发送前不是 (1,0,0)、未见 17、见 17 未回 1、其他客户端干扰</td><td style="text-align:left">查看 ensure_home 的每一步日志</td><td style="text-align:left">记为失败；恢复稳定趴下后再由教师指导</td></tr><tr><td style="text-align:left">task07 启动自动归零后停止</td><td style="text-align:left">当前状态非 1/98，归零未确认</td><td style="text-align:left">查看启动门控和 17→1</td><td style="text-align:left">不关闭状态监听，先恢复稳定趴下</td></tr><tr><td style="text-align:left">GUI 站立时回零被拒绝</td><td style="text-align:left">task10 回零要求 (1,0,0) 或 98</td><td style="text-align:left">查看当前姿态</td><td style="text-align:left">先按 Space 趴下</td></tr></tbody></table>
+<h4>轴值、方向与停车</h4>
+<table><thead><tr><th style="text-align:left">故障现象</th><th style="text-align:left">可能原因</th><th style="text-align:left">诊断方法</th><th style="text-align:left">处理</th></tr></thead><tbody><tr><td style="text-align:left">task06/07 未前进</td><td style="text-align:left">轴值不大于 6553、未移动就绪、被阻挡、其他客户端覆盖</td><td style="text-align:left">查看 gait、basic、轴值和速度</td><td style="text-align:left">先排除状态与场地，再用默认点动参数</td></tr><tr><td style="text-align:left">前进方向为负</td><td style="text-align:left">轴符号/约定异常或另一控制源发负值</td><td style="text-align:left">看 vel_body[0] 与命令来源</td><td style="text-align:left">立即停止，报告教师，不盲目改符号</td></tr><tr><td style="text-align:left">task09 左移/右移速度符号不符</td><td style="text-align:left">侧向约定或实测姿态干扰</td><td style="text-align:left">对照 ±16000 与 vel_body[1]</td><td style="text-align:left">停止并记录；不在现场连续试错</td></tr><tr><td style="text-align:left">task09 状态丢失仍运动</td><td style="text-align:left"><code>_run_direction()</code> 无状态时只跳过采样</td><td style="text-align:left">观察终端停止更新与当前轴值</td><td style="text-align:left">立即 Ctrl-C/安全停止，恢复状态链路</td></tr><tr><td style="text-align:left">停车后仍有速度</td><td style="text-align:left">观察窗口不足、惯性、轴值残留、其他客户端</td><td style="text-align:left">看停车日志与 cooldown</td><td style="text-align:left">保持零轴流，延长观察，排查控制源</td></tr><tr><td style="text-align:left">task06 显示“~方向正确”</td><td style="text-align:left">方向对但未停稳；函数仍可能返回 True</td><td style="text-align:left">单独核对停车段</td><td style="text-align:left">不算完整通过，重新验证停车</td></tr><tr><td style="text-align:left">task06 停车样本为 None</td><td style="text-align:left">状态帧缺失</td><td style="text-align:left">检查停车采样和 rx 计数</td><td style="text-align:left">不能据 None 判停稳，重新获取有效数据</td></tr><tr><td style="text-align:left">task08 一直原地运动</td><td style="text-align:left">前/后小于 1 m、非有限值或状态过期</td><td style="text-align:left">查看前/后距离与模式切换日志</td><td style="text-align:left">稳定后清障；检查传感器与状态帧</td></tr><tr><td style="text-align:left">task08 自动恢复前进</td><td style="text-align:left">两侧距离均恢复到不小于 1.0 m</td><td style="text-align:left">查看“恢复”日志</td><td style="text-align:left">确认场地仍安全，人员不进入路径</td></tr><tr><td style="text-align:left">task08 修改 cooldown 无变化</td><td style="text-align:left">参数未传给 <code>_safe_stop()</code>，内部固定 5 s</td><td style="text-align:left">对照代码调用与停车日志</td><td style="text-align:left">按实际 5 s 上限评价，不虚构参数效果</td></tr><tr><td style="text-align:left">停车时直接停轴流</td><td style="text-align:left">操作顺序错误</td><td style="text-align:left">检查 forward=0 后是否仍发三轴</td><td style="text-align:left">先零轴保活减速，再结束流</td></tr></tbody></table>
+<h4>task10 GUI</h4>
+<table><thead><tr><th style="text-align:left">故障现象</th><th style="text-align:left">可能原因</th><th style="text-align:left">诊断方法</th><th style="text-align:left">处理</th></tr></thead><tbody><tr><td style="text-align:left">GUI 打不开</td><td style="text-align:left">Tkinter 缺失、显示环境错误</td><td style="text-align:left">检查 <code>python3-tk</code> 与 WSL 显示</td><td style="text-align:left">安装/配置显示环境；不在 Windows 混用 venv</td></tr><tr><td style="text-align:left">视频卡在连接中</td><td style="text-align:left">RTSP 地址、网络、FFmpeg、相机问题</td><td style="text-align:left">查看视频错误文本；用 task12 offline 对照</td><td style="text-align:left">先修视频；视频与控制链路分开判断</td></tr><tr><td style="text-align:left">状态一直等待</td><td style="text-align:left">状态端口/上报链路异常</td><td style="text-align:left">运行 task01/task02</td><td style="text-align:left">恢复 0901 后再操作 GUI</td></tr><tr><td style="text-align:left">方向键无反应</td><td style="text-align:left">趴下、未就绪、过渡态、状态过期、跟踪中</td><td style="text-align:left">查看状态/姿态/安全提示</td><td style="text-align:left">按条件准备；跟踪中先退出</td></tr><tr><td style="text-align:left">松键后仍运动</td><td style="text-align:left">按键释放未送达、其他客户端、状态异常</td><td style="text-align:left">看是否有残留方向键或第二控制源</td><td style="text-align:left">Esc/停止按钮归零，排查焦点与客户端</td></tr><tr><td style="text-align:left">左右移动没有近障警报</td><td style="text-align:left">设计上无侧向测距保护</td><td style="text-align:left">查看 GUI 红色提示</td><td style="text-align:left">人工清场，不认为“无警报=安全”</td></tr><tr><td style="text-align:left">跟踪中手动方向被拒绝</td><td style="text-align:left">手动/跟踪互斥</td><td style="text-align:left">查看“人体跟踪中”提示</td><td style="text-align:left">按 T/停止按钮退出跟踪</td></tr><tr><td style="text-align:left">失焦后仍跟踪</td><td style="text-align:left">窗口事件异常或会话未释放</td><td style="text-align:left">查看跟踪按钮和状态</td><td style="text-align:left">Esc/停止按钮显式退出，关闭窗口复核</td></tr><tr><td style="text-align:left">关闭窗口后仍站立</td><td style="text-align:left">关闭不自动趴下/归零</td><td style="text-align:left">查看最终状态</td><td style="text-align:left">重新受控打开，按 Space 收尾并归零</td></tr></tbody></table>
+<h4>task12 视觉、标定与 PID</h4>
+<table><thead><tr><th style="text-align:left">故障现象</th><th style="text-align:left">可能原因</th><th style="text-align:left">诊断方法</th><th style="text-align:left">处理</th></tr></thead><tbody><tr><td style="text-align:left">selfcheck 失败</td><td style="text-align:left">数值逻辑、依赖或文件被改动</td><td style="text-align:left">查看第一个失败断言</td><td style="text-align:left">不进入真机；恢复教师提供版本并报告</td></tr><tr><td style="text-align:left">offline 无人体框</td><td style="text-align:left">权重缺失、光照/遮挡、置信度不足、画面失败</td><td style="text-align:left">检查资源与画面；观察是否检测其他人</td><td style="text-align:left">改善离线条件，不先在真机调 PID</td></tr><tr><td style="text-align:left">跟踪 ID 频繁变化</td><td style="text-align:left">多人交叉、遮挡、检测抖动</td><td style="text-align:left">观察目标框与画面中心选择</td><td style="text-align:left">保持单人、少遮挡场景重新验证</td></tr><tr><td style="text-align:left">标定提示非凸四边形</td><td style="text-align:left">点序交叉、错点、退化</td><td style="text-align:left">查看叉积提示</td><td style="text-align:left">右键/R 清除，按近左→近右→远右→远左重选</td></tr><tr><td style="text-align:left">标定残差异常</td><td style="text-align:left">坐标/实物不符、点选错误</td><td style="text-align:left">查看四项重投影残差</td><td style="text-align:left">重新卷尺布点，不手改矩阵伪造</td></tr><tr><td style="text-align:left">真机拒绝 dummy</td><td style="text-align:left">CLI、文件名或矩阵数值命中拦截</td><td style="text-align:left">查看启动失败原文</td><td style="text-align:left">使用真实 H.npy；改名不能绕过</td></tr><tr><td style="text-align:left">距离严重偏大/偏小</td><td style="text-align:left">相机移动、脚点不在地面、标定不匹配</td><td style="text-align:left">用已知位置做 offline 复核</td><td style="text-align:left">固定相机、复核标定和脚点假设</td></tr><tr><td style="text-align:left"><code>forward&lt;=0</code> 或反投影无效</td><td style="text-align:left">单应病态、点在平面模型外</td><td style="text-align:left">查看停车提示与 H 是否 3×3 有限</td><td style="text-align:left">重新标定；不调大 PID 掩盖</td></tr><tr><td style="text-align:left">偏航方向反</td><td style="text-align:left">坐标/WZ_SIGN 与真机不一致</td><td style="text-align:left">悬挂小幅测试</td><td style="text-align:left">立即停车，由教师分析；本课程不改代码</td></tr><tr><td style="text-align:left">一直“目标过远”</td><td style="text-align:left">视觉距离大于 3.5 m、标定错误</td><td style="text-align:left">查看画面距离与标定复核</td><td style="text-align:left">先离线确认，再重新标定；不进近距离盲试</td></tr><tr><td style="text-align:left">一直“目标过近”</td><td style="text-align:left">距离小于 1.0 m、脚点/标定误差</td><td style="text-align:left">查看 ONLY_TURN 与实际前进轴</td><td style="text-align:left">确保 vx=0，拉远目标前先停稳</td></tr><tr><td style="text-align:left">视频帧过期</td><td style="text-align:left">旧帧重复读取、视频卡顿、推理慢</td><td style="text-align:left">查看采集时间戳与 frame_age</td><td style="text-align:left">停止真机，离线排查；不刷新时间戳掩盖</td></tr><tr><td style="text-align:left">看门狗停车</td><td style="text-align:left">控制循环超过 1.0 s 未更新</td><td style="text-align:left">查看是否推理/线程阻塞</td><td style="text-align:left">退出会话，检查性能与线程；安全复位后重试</td></tr><tr><td style="text-align:left">声纳数据超时</td><td style="text-align:left">状态原始帧龄超过 0.3 s</td><td style="text-align:left">比较 us_value 与 state_age</td><td style="text-align:left">修状态上报；不能用读取时刻刷新</td></tr><tr><td style="text-align:left">声纳数据无效</td><td style="text-align:left">值为 None、非有限或不大于 0</td><td style="text-align:left">查看前声纳与状态帧</td><td style="text-align:left">检查传感器/解析；无效按 STOP</td></tr><tr><td style="text-align:left">过近只转不进</td><td style="text-align:left"><code>ONLY_TURN</code> 生效</td><td style="text-align:left">查看 decision 与 vx/wz</td><td style="text-align:left">属预期；确认无前进轴，不为靠近而绕开</td></tr><tr><td style="text-align:left">停车后积分残留</td><td style="text-align:left">未调用 reset/active=False</td><td style="text-align:left">运行 selfcheck 并检查停车调用</td><td style="text-align:left">每次安全停车保持 reset，不在现场改逻辑</td></tr></tbody></table>
+<h4>单元测试与环境</h4>
+<table><thead><tr><th style="text-align:left">故障现象</th><th style="text-align:left">可能原因</th><th style="text-align:left">诊断方法</th><th style="text-align:left">处理</th></tr></thead><tbody><tr><td style="text-align:left"><code>unittest discover</code> 导入失败</td><td style="text-align:left">未在项目根目录、依赖缺失、Python 环境错误</td><td style="text-align:left">检查 cwd 与 venv</td><td style="text-align:left">在 WSL 项目根目录激活 venv 后运行</td></tr><tr><td style="text-align:left">task12 测试未覆盖真机方向</td><td style="text-align:left">自检只验证 WZ_SIGN 内部一致性</td><td style="text-align:left">查看 selfcheck 最后提示</td><td style="text-align:left">增加悬挂真机方向验证，不把测试当实测</td></tr><tr><td style="text-align:left">Windows 可读文件但命令失败</td><td style="text-align:left">使用 Windows Python/路径或网络环境不同</td><td style="text-align:left">对比 WSL <code>pwd</code> 与 Python</td><td style="text-align:left">回到 WSL <code>~/lite3_lab/real_robot</code></td></tr><tr><td style="text-align:left">task04/task11 找不到现行任务</td><td style="text-align:left">历史编号调整</td><td style="text-align:left">查看 README 与本课程任务表</td><td style="text-align:left">task04 不补做；task11 使用 task12 替代</td></tr></tbody></table>
+<h3>常见错误</h3>
+<ul><li>只记录结果截图，不记录命令、参数和状态序列，导致无法复现。</li><li>将 task06 的部分成功、task08 的避障成功或进程退出码当作完整验收。</li><li>用增大轴值、延长时间、降低阈值来掩盖网络、标定或状态问题。</li><li>把 0.5 s 公共状态新鲜度、0.2 s 视觉帧龄、0.3 s 声纳帧龄、0.5 s 感知超时和 1.0 s 看门狗混为一谈。</li><li>将 task12 保留的 <code>lost_confirm=10</code> 字段误认为目标丢失会等待 10 帧；当前安全层立即停车。</li><li>认为 <code>--auto-follow</code> 会自动起立；它只自动发起跟踪，启动门控仍要求运动就绪。</li><li>认为离线模式能验证声纳保护；<code>--offline</code> 关闭真机声纳门控，只验证视觉与数值链路。</li><li>在标定后移动相机或机器人，却继续使用旧 H.npy。</li><li>用真人测试避障或跟随停车，造成碰撞风险。</li><li>把“单元测试通过”写成“真机安全通过”，忽略现场方向、场地和机械防护验证。</li></ul>
+</section>
+</main>
+<script>
+const COURSE_NAME = document.documentElement.dataset.course || document.title;
+const main = document.querySelector('main');
+const views = [...document.querySelectorAll('.view')];
+const ids = views.map(v => v.id.replace(/^view-/, ''));
+const links = [...document.querySelectorAll('aside nav a')];
+const chapterNames = Object.fromEntries(
+  links.map(a => [a.getAttribute('href').slice(1), a.textContent.trim()])
+);
+const mobileSelect = document.querySelector('.mobile-nav select');
+const bar = document.querySelector('.course-bar');
+
+function firstId(){ return ids[0] || 'intro'; }
+function setText(sel, text){ const el = bar && bar.querySelector(sel); if (el) el.textContent = text; }
+
+function showView(id, updateHash){
+  if (!ids.includes(id)) id = firstId();
+  const idx = ids.indexOf(id);
+  views.forEach(v => v.classList.toggle('active', v.id === 'view-' + id));
+  links.forEach(a => a.classList.toggle('active', a.getAttribute('href') === '#' + id));
+  setText('.course-name', COURSE_NAME);
+  setText('.chapter-name', chapterNames[id] || '');
+  setText('.chapter-progress', (idx + 1) + ' / ' + ids.length);
+  const progress = document.getElementById('progress');
+  if (progress) progress.style.width = ((idx + 1) / ids.length * 100) + '%';
+  if (mobileSelect) mobileSelect.value = id;
+  main.scrollTop = 0;
+  if (updateHash) history.pushState(null, '', '#' + id);
+}
+
+links.forEach(a => a.addEventListener('click', e => {
+  e.preventDefault();
+  showView(a.getAttribute('href').slice(1), true);
+}));
+if (mobileSelect) mobileSelect.addEventListener('change', e => showView(e.target.value, true));
+window.addEventListener('popstate', () =>
+  showView(location.hash.slice(1) || firstId(), false));
+showView(location.hash.slice(1) || firstId(), false);
+</script>
+</body>
+</html>

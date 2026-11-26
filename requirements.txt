@@ -1,8 +1,2 @@
-# requirements.txt
-torch>=2.0
-torchvision>=0.15
-ultralytics>=8.2.0
-opencv-python>=4.8.0
-numpy>=1.24,<2.0
-pyserial>=3.5
-matplotlib>=3.7
+-r real_robot/requirements.txt
+-r simulation/requirements.txt
